@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Podsblitz
+GenericName=Podcatcher
+Comment=A podcast manager and player
+Categories=Multimedia;
+Exec=de.hannenz.podsblitz
+Icon=de.hannenz.podsblitz
+Terminal=false
+Type=Application
+Keywords=Podcatcher;Podcast;Podcasts

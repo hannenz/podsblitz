@@ -1,0 +1,44 @@
+# German translations for de.hannenz.podsblitz package.
+# Copyright (C) 2020 THE de.hannenz.podsblitz'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the de.hannenz.podsblitz package.
+# Automatically generated, 2020.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: de.hannenz.podsblitz\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-04-16 23:38+0200\n"
+"PO-Revision-Date: 2020-04-16 23:36+0200\n"
+"Last-Translator: Automatically generated\n"
+"Language-Team: none\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=ASCII\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: data/de.hannenz.podsblitz.appdata.xml.in:6
+#: data/de.hannenz.podsblitz.desktop.in:3
+msgid "Podsblitz"
+msgstr ""
+
+#: data/de.hannenz.podsblitz.appdata.xml.in:7
+#: data/de.hannenz.podsblitz.desktop.in:4
+msgid "Podcatcher"
+msgstr ""
+
+#: data/de.hannenz.podsblitz.appdata.xml.in:9
+msgid "A tool to manage and play podcasts"
+msgstr ""
+
+#: data/de.hannenz.podsblitz.desktop.in:5
+msgid "A podcast manager and player"
+msgstr ""
+
+#: data/de.hannenz.podsblitz.desktop.in:8
+msgid "application-default-icon"
+msgstr ""
+
+#: data/de.hannenz.podsblitz.desktop.in:11
+msgid "Podcatcher;Podcast;Podcasts"
+msgstr ""
