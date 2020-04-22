@@ -69,7 +69,7 @@ namespace Podsblitz {
 		}
 
 
-		protected async void readRss() {
+		protected void readRss() {
 			print("Loading XML from %s\n", this._url);
 
 			var file = GLib.File.new_for_uri(this._url); 

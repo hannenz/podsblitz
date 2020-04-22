@@ -6,5 +6,6 @@ sources = files(
 	'Subscription.vala',
 	'Episode.vala',
     'widgets/MainWindow.vala',
-    'widgets/HeaderBar.vala'
+    'widgets/HeaderBar.vala',
+    'widgets/AddSubscriptionDialog.vala'
 )

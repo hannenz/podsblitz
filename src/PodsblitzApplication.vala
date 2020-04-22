@@ -35,40 +35,6 @@ namespace Podsblitz {
 			);
 
 
-			// try {
-			// 	pixbuf1 = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/Downloads/90b94565-0091-46e2-9b1b-52b53e1eb051.png.jpeg", 200, 200);
-			// }
-			// catch (Error e) {
-			// 	stderr.printf("Failed to create pixbuf from file\n");
-			// 	return;
-			// }
-            //
-			// this.library.append(out iter);
-			// this.library.set(iter, 0, "True Kleincrime", 1, pixbuf1, -1);
-            //
-			// try {
-			// 	pixbuf2 = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/Downloads/dd50b44d-03ac-41b3-8258-7a2c228319b5.jpeg", 200, 200);
-			// }
-			// catch (Error e) {
-			// 	stderr.printf("Failed to create pixbuf from file\n");
-			// 	return;
-			// }
-            //
-			// this.library.append(out iter);
-			// this.library.set(iter, 0, "Tagesticket", 1, pixbuf2, -1);
-            //
-			// try {
-			// 	pixbuf3 = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/Downloads/df6d708f45c10c57f0f46b6fc9ea8e279fc3e006.jpg", 200, 200);
-			// }
-			// catch (Error e) {
-			// 	stderr.printf("Failed to create pixbuf from file\n");
-			// 	return;
-			// }
-            //
-			// this.library.append(out iter);
-			// this.library.set(iter, 0, "Deutschlandfunk - der Tag", 1, pixbuf3, -1);
-            //
-            //
 			this.latest = new Gtk.ListStore(
 				6,
 				typeof(Gdk.Pixbuf), 			// Cover
@@ -78,45 +44,7 @@ namespace Podsblitz {
 				typeof(GLib.Date), 				// Publication  date
 				typeof(uint) 					// duration (seconds)
 				);
-            //
-			// this.latest.append(out iter);
-			// this.latest.set(iter, 
-			// 				0, pixbuf3.scale_simple(96, 96, Gdk.InterpType.BILINEAR),
-			// 				1, "<b>Der lange Weg zurück zur Normalität - Der Tag</b>\n<small><b>Deutschlandfunk - Der Tag</b></small>\nDie massiven Beschränkungen der letzen Wochen wirken. Die Infektionskurve flacht sich stark ab. Warum die Rückkehr …",
-			// 				2, "Lorem ipsum dolor sit amet",
-			// 				3, "True Kleincrime",
-			// 				4, new DateTime.now_local(),
-			// 				5, 72 * 60,
-			// 				-1
-			// 			   );
-            //
-			// this.latest.append(out iter);
-			// this.latest.set(iter, 
-			// 				0, pixbuf2.scale_simple(96, 96, Gdk.InterpType.BILINEAR),
-			// 				1, "<b>Was die Corona-Isolation mit Suchtkranken macht</b>\n<small><b>Tagesticket - der Frühpodcast</b></small>\nDas Kontaktverbot macht es Suchtberatungsstellen schwer, sich um Betroffene zu kümmern. Viele gleiten wieder …",
-			// 				2, "Lorem ipsum dolor sit amet",
-			// 				3, "Tagesticket",
-			// 				4, new DateTime.now_local(),
-			// 				5, 24 * 60,
-			// 				-1
-			// 			   );
-            //
-			// this.latest.append(out iter);
-			// this.latest.set(iter, 
-			// 				0, pixbuf1.scale_simple(96, 96, Gdk.InterpType.BILINEAR),
-			// 				1, "<b>Peter, Peter, Fußabtreter</b>\n<small><b>True Klein Crime - der Kurzgeschichten-Podcast mit Willy Nachdenklich</b></small>\n",
-			// 				2, "Lorem ipsum dolor sit amet",
-			// 				3, "Tagesticket",
-			// 				4, new DateTime.now_local(),
-			// 				5, 24 * 60,
-			// 				-1
-			// 			   );
-            //
-
-
 		}
-
-
 
 		protected override void startup() {
 
@@ -125,37 +53,43 @@ namespace Podsblitz {
 
 			base.startup();
 
-			// try {
-				var db = new Database();
-				this.subscriptions = db.getAllSubscriptions();
-				
-				foreach (Subscription subscription in this.subscriptions) {
+			// Create the menu
 
-					subscription.dump();
+			var action = new GLib.SimpleAction("add-subscription", null);
+			action.activate.connect(addSubscription);
+			add_action(action);
 
-					// var pixbuf = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/Downloads/90b94565-0091-46e2-9b1b-52b53e1eb051.png.jpeg", 200, 200);
-					this.library.append(out iter);
-					this.library.set(iter,
-									 0, Markup.escape_text(subscription.title), 
-									 1, Markup.escape_text(truncate(subscription.title, 200)),
-									 2, subscription.cover,
-									 3, subscription.pos
-									 -1);
-					subscription.iter = iter;
-					subscription.changed.connect( (sub) => {
-						this.library.set(sub.iter,
-								0, Markup.escape_text(sub.title),
-								1, Markup.escape_text(truncate(sub.title, 200)),
-								2, sub.cover,
-								3, sub.pos
-								);
-						this.db.saveSubscription(sub);
-					});
-				}
-			// }
-			// catch (Error e) {
-			// 	stdout.printf(e.message);
-			// }
+			Menu app_menu = new Menu();
+			app_menu.append("Add a podcast", "app.add-subscription");
+			set_app_menu(app_menu);
+
+
+			var db = new Database();
+			this.subscriptions = db.getAllSubscriptions();
+			
+			foreach (Subscription subscription in this.subscriptions) {
+
+				subscription.dump();
+
+				// var pixbuf = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/Downloads/90b94565-0091-46e2-9b1b-52b53e1eb051.png.jpeg", 200, 200);
+				this.library.append(out iter);
+				this.library.set(iter,
+								 0, Markup.escape_text(subscription.title), 
+								 1, Markup.escape_text(truncate(subscription.title, 200)),
+								 2, subscription.cover,
+								 3, subscription.pos
+								 -1);
+				subscription.iter = iter;
+				subscription.changed.connect( (sub) => {
+					this.library.set(sub.iter,
+							0, Markup.escape_text(sub.title),
+							1, Markup.escape_text(truncate(sub.title, 200)),
+							2, sub.cover,
+							3, sub.pos
+							);
+					this.db.saveSubscription(sub);
+				});
+			}
 		}
 
 
@@ -188,22 +122,27 @@ namespace Podsblitz {
 
 
 
-			// var db = new Database();
-			// var sbscr = db.getSubscriptionByGuid("7441a641-990e-531e-a474-d3f5ddc66baf");
-			// if (sbscr != null) {
-			// 	sbscr.dump();
-			// }
-			// return;
-
-
-
 			return;
  
-			foreach (Subscription subscription in this.subscriptions) {
-				subscription.update();
-			}
+			// foreach (Subscription subscription in this.subscriptions) {
+			// 	subscription.update();
+			// }
 		}
 
+
+		public void addSubscription() {
+			print("Activating 'Add Podcast' action\n");
+			var dlg = new AddSubscriptionDialog();
+			var ret = dlg.run();
+			dlg.close();
+			if  (ret != Gtk.ResponseType.APPLY) {
+				return;
+			}
+			var url = dlg.get_url();
+
+			var subscription = new Subscription();
+			subscription.subscribe(url);
+		}
 
 
 		public void updateStream() {
@@ -214,8 +153,10 @@ namespace Podsblitz {
 			return this.library;
 		}
 
+
 		public Gtk.ListStore get_latest() {
 			return this.latest;
 		}
+
 	}
 }

@@ -21,12 +21,9 @@ namespace Podsblitz {
 
 			set_custom_title(stack_switcher);
 
-			var menu_button = new Gtk.Button.from_icon_name("open-menu", Gtk.IconSize.LARGE_TOOLBAR);
-			menu_button.valign = Gtk.Align.CENTER;
-
-			pack_end(menu_button);
-
-
+			// var menu_button = new Gtk.Button.from_icon_name("open-menu", Gtk.IconSize.LARGE_TOOLBAR);
+			// menu_button.valign = Gtk.Align.CENTER;
+			// pack_end(menu_button);
 
 		}
 	}
