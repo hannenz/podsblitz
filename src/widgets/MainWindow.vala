@@ -28,10 +28,11 @@ namespace Podsblitz {
 			stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT);
 
 			var icon_view = new Gtk.IconView.with_model(this.app.get_library());
-			icon_view.set_text_column(0);
-			icon_view.set_pixbuf_column(1);
+			icon_view.set_markup_column(1);
+			icon_view.set_pixbuf_column(2);
 			icon_view.set_item_width(64);
 			icon_view.set_item_padding(16);
+			icon_view.reorderable = true;
 
 			var tree_view = new Gtk.TreeView();
 			tree_view.set_model(this.app.get_latest());
@@ -80,7 +81,7 @@ namespace Podsblitz {
 			var player_vbox = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
 			var player_cover = new Gtk.Image();
 			paned.pack2(player_vbox, false, false);
-			player_vbox.set_size_request(200, -1);
+			player_vbox.set_size_request(300, -1);
 
 
 			add(paned);

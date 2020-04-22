@@ -2,8 +2,9 @@ sources = files(
     'main.vala',
 	'PodsblitzApplication.vala',
 	'Database.vala',
-    'widgets/MainWindow.vala',
-    'widgets/HeaderBar.vala',
+	'Utility.vala',
 	'Subscription.vala',
-	'Episode.vala'
+	'Episode.vala',
+    'widgets/MainWindow.vala',
+    'widgets/HeaderBar.vala'
 )

@@ -11,6 +11,8 @@ namespace Podsblitz {
 
 		protected List<Subscription> subscriptions;
 
+		protected Database db;
+
 
 		public static PodsblitzApplication() {
 			Object(
@@ -20,12 +22,16 @@ namespace Podsblitz {
 
 			settings = new GLib.Settings("de.hannenz.podsblitz");
 
+			this.db = new Database();
+
 			this.subscriptions = new List<Subscription>();
 
 			this.library = new Gtk.ListStore (
-				2,
-				typeof(string),				// Name
-				typeof(Gdk.Pixbuf) 			// Cover
+				4,
+				typeof(string),				// Title
+				typeof(string), 			// Title shortened
+				typeof(Gdk.Pixbuf),			// Cover
+				typeof(int) 				// Position (Order)
 			);
 
 
@@ -122,12 +128,29 @@ namespace Podsblitz {
 			try {
 				var db = new Database();
 				this.subscriptions = db.getAllSubscriptions();
+				
 				foreach (Subscription subscription in this.subscriptions) {
+
+					subscription.dump();
+
+					// var pixbuf = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/Downloads/90b94565-0091-46e2-9b1b-52b53e1eb051.png.jpeg", 200, 200);
 					this.library.append(out iter);
 					this.library.set(iter,
 									 0, subscription.title, 
-									 1, null, -1);
+									 1, truncate(subscription.title, 200),
+									 2, null,
+									 3, subscription.pos
+									 -1);
 					subscription.iter = iter;
+					subscription.changed.connect( (sub) => {
+						this.library.set(sub.iter,
+								0, sub.title,
+								1, truncate(sub.title, 200),
+								2, sub.cover,
+								3, sub.pos
+								);
+						this.db.saveSubscription(sub);
+					});
 				}
 			}
 			catch (Error e) {
@@ -165,12 +188,12 @@ namespace Podsblitz {
 
 
 
-			var db = new Database();
-			var sbscr = db.getSubscriptionByGuid("7441a641-990e-531e-a474-d3f5ddc66baf");
-			if (sbscr != null) {
-				sbscr.dump();
-			}
-			return;
+			// var db = new Database();
+			// var sbscr = db.getSubscriptionByGuid("7441a641-990e-531e-a474-d3f5ddc66baf");
+			// if (sbscr != null) {
+			// 	sbscr.dump();
+			// }
+			// return;
 
 
 

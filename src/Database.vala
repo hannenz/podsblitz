@@ -1,15 +1,16 @@
 using Sqlite; 
 
+
 namespace Podsblitz {
 
 	public class Database : Object {
 
 		protected Sqlite.Database db;
 
+
 		public Database() {
 			this.open();
 		}
-
 
 
 		public void open() {
@@ -38,7 +39,7 @@ namespace Podsblitz {
 			int ret;
 			Sqlite.Statement stmt;
 
-			const string query = "SELECT * FROM subscriptions";
+			const string query = "SELECT * FROM subscriptions ORDER BY pos ASC";
 			ret = this.db.prepare_v2(query, query.length, out stmt);
 			if (ret != Sqlite.OK) {
 				stderr.printf("Error: %d: %s\n", db.errcode(), db.errmsg());
@@ -57,15 +58,27 @@ namespace Podsblitz {
 
 					switch (col_name) {
 						case "title":
-							subscription.title = val;
+							subscription.title = stmt.column_text(i);
 							break;
 
 						case "url":
-							subscription.url = val;
+							subscription.url = stmt.column_text(i);
 							break;
 
 						case "description":
-							subscription.description = val;
+							subscription.description = stmt.column_text(i);
+							break;
+
+						case "pos":
+							subscription.pos = stmt.column_int(i);
+							break;
+
+						case "guid":
+							subscription.guid = stmt.column_text(i);
+							break;
+
+						case "cover":
+							// subscription.cover = new Gdk.Pixbuf.from_bytes(
 							break;
 					}
 
@@ -81,11 +94,35 @@ namespace Podsblitz {
 
 
 		public void saveSubscription(Subscription subscription) {
-			string query = "INSERT INTO subscriptions (title, description, url)";
+
+			uint8[] buffer;
+			try {
+				subscription.cover.save_to_buffer(out buffer, "png");
+			}
+			catch (Error e) {
+				print("Error: %s\n", e.message);
+			}
+
+			string query = "INSERT INTO subscriptions (title, description, url, guid, pos, cover) VALUES ('%s', '%s', '%s', '%s', %u, '%s')".printf(
+				subscription.title,
+				subscription.description,
+				subscription.url,
+				subscription.guid,
+				subscription.pos,
+				(string)buffer
+			);
+
+			print("%s\n", query); 
+			string error_message;
+			int ret = this.db.exec(query, null, out error_message);
+			if (ret != Sqlite.OK) {
+				stderr.printf("Error: %s\n", error_message);
+				return;
+			}
 		}
 
 
-		public Subscription getSubscriptionByGuid(string guid) {
+		public Subscription? getSubscriptionByGuid(string guid) {
 
 			int ret;
 			Sqlite.Statement stmt;
