@@ -2,7 +2,6 @@ namespace Podsblitz {
 
 	public class Subscription {
 
-		public string guid { get; set; }
 		public string title { get; set; }
 		public string description { get; set; }
 		public int pos;
@@ -103,7 +102,6 @@ namespace Podsblitz {
 				stdout.printf("[CTX] Failed to parse RSS Feed at %s\n", this._url);
 			}
 
-			this.guid = this.getXPath(ctx, "/rss/channel/guid");
 			this.title = this.getXPath(ctx, "/rss/channel/title");
 			this.description = this.getXPath(ctx, "/rss/channel/description");
 			var imageurl = this.getXPath(ctx, "/rss/channel/image/url");
@@ -146,7 +144,6 @@ namespace Podsblitz {
 		public void dump() {
 			print("Subscription: %s\n", this.title);
 			print("URL: %s\n", this.url);
-			print("GUID: %s\n", this.guid);
 			print("Description: %s\n", this.description);
 
 			foreach (var episode in this.episodes) {

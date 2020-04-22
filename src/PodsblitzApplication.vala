@@ -121,11 +121,11 @@ namespace Podsblitz {
 		protected override void startup() {
 
 			Gtk.TreeIter iter;
-			Gdk.Pixbuf pixbuf1, pixbuf2, pixbuf3;
+			// Gdk.Pixbuf pixbuf1, pixbuf2, pixbuf3;
 
 			base.startup();
 
-			try {
+			// try {
 				var db = new Database();
 				this.subscriptions = db.getAllSubscriptions();
 				
@@ -136,26 +136,26 @@ namespace Podsblitz {
 					// var pixbuf = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/Downloads/90b94565-0091-46e2-9b1b-52b53e1eb051.png.jpeg", 200, 200);
 					this.library.append(out iter);
 					this.library.set(iter,
-									 0, subscription.title, 
-									 1, truncate(subscription.title, 200),
-									 2, null,
+									 0, Markup.escape_text(subscription.title), 
+									 1, Markup.escape_text(truncate(subscription.title, 200)),
+									 2, subscription.cover,
 									 3, subscription.pos
 									 -1);
 					subscription.iter = iter;
 					subscription.changed.connect( (sub) => {
 						this.library.set(sub.iter,
-								0, sub.title,
-								1, truncate(sub.title, 200),
+								0, Markup.escape_text(sub.title),
+								1, Markup.escape_text(truncate(sub.title, 200)),
 								2, sub.cover,
 								3, sub.pos
 								);
 						this.db.saveSubscription(sub);
 					});
 				}
-			}
-			catch (Error e) {
-				stdout.printf(e.message);
-			}
+			// }
+			// catch (Error e) {
+			// 	stdout.printf(e.message);
+			// }
 		}
 
 
@@ -197,6 +197,8 @@ namespace Podsblitz {
 
 
 
+			return;
+ 
 			foreach (Subscription subscription in this.subscriptions) {
 				subscription.update();
 			}

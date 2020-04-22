@@ -53,8 +53,6 @@ namespace Podsblitz {
 
 				for (int i = 0; i < cols; i++) {
 					string col_name = stmt.column_name(i) ?? "<none>";
-					string val = stmt.column_text(i) ?? "<none>";
-					// int type_id  = stmt.column_type(i);
 
 					switch (col_name) {
 						case "title":
@@ -73,12 +71,16 @@ namespace Podsblitz {
 							subscription.pos = stmt.column_int(i);
 							break;
 
-						case "guid":
-							subscription.guid = stmt.column_text(i);
-							break;
-
 						case "cover":
-							// subscription.cover = new Gdk.Pixbuf.from_bytes(
+							try {
+								var base64encoded_data = stmt.column_text(i);
+								InputStream istream = new MemoryInputStream.from_data(Base64.decode(base64encoded_data), GLib.free);
+								subscription.cover = new Gdk.Pixbuf.from_stream_at_scale(istream, 150, -1, true, null);
+							}
+							catch (Error e) {
+								print("Error: %s\n", e.message);
+							}
+
 							break;
 					}
 
@@ -95,7 +97,11 @@ namespace Podsblitz {
 
 		public void saveSubscription(Subscription subscription) {
 
+			int ret;
+			string query;
+			string error_message;
 			uint8[] buffer;
+
 			try {
 				subscription.cover.save_to_buffer(out buffer, "png");
 			}
@@ -103,18 +109,33 @@ namespace Podsblitz {
 				print("Error: %s\n", e.message);
 			}
 
-			string query = "INSERT INTO subscriptions (title, description, url, guid, pos, cover) VALUES ('%s', '%s', '%s', '%s', %u, '%s')".printf(
+
+
+			// UPSERT: https://stackoverflow.com/a/38463024
+			query = "UPDATE subscriptions  SET title='%s', description='%s', url='%s', pos=%u, cover='%s' WHERE url='%s'".printf(
 				subscription.title,
 				subscription.description,
 				subscription.url,
-				subscription.guid,
 				subscription.pos,
-				(string)buffer
+				Base64.encode(buffer),
+				subscription.url
 			);
 
-			print("%s\n", query); 
-			string error_message;
-			int ret = this.db.exec(query, null, out error_message);
+			ret = this.db.exec(query, null, out error_message);
+			if (ret != Sqlite.OK) {
+				stderr.printf("Error: %s\n", error_message);
+				return;
+			}
+
+			query = "INSERT INTO subscriptions (title, description, url, pos, cover) SELECT '%s', '%s', '%s', %u, '%s' WHERE (Select Changes() = 0)".printf(
+				subscription.title,
+				subscription.description,
+				subscription.url,
+				subscription.pos,
+				Base64.encode(buffer)
+			);
+
+			ret = this.db.exec(query, null, out error_message);
 			if (ret != Sqlite.OK) {
 				stderr.printf("Error: %s\n", error_message);
 				return;
@@ -122,14 +143,14 @@ namespace Podsblitz {
 		}
 
 
-		public Subscription? getSubscriptionByGuid(string guid) {
+		public Subscription? getSubscriptionByUrl(string url) {
 
 			int ret;
 			Sqlite.Statement stmt;
 			print("CHECK\n");
 			var subscription = new Subscription();
 
-			string query = "SELECT * FROM subscriptions WHERE guid = '%s' LIMIT 1".printf(guid);
+			string query = "SELECT * FROM subscriptions WHERE url = '%s' LIMIT 1".printf(url);
 			print(query);
 
 			ret = this.db.prepare_v2(query, query.length, out stmt);
@@ -148,9 +169,6 @@ namespace Podsblitz {
 					string val = stmt.column_text(i) ?? "<none>";
 
 					switch (col_name) {
-						case "guid":
-							subscription.guid = val;
-							break;
 
 						case "title":
 							subscription.title = val;
