@@ -1,5 +1,15 @@
 namespace Podsblitz {
 
+	enum ListStoreColumn {
+		TITLE,
+		TITLE_SHORT,
+		COVER,
+		POSITION,
+		DESCRIPTION,
+		URL,
+		N_COLUMNS
+	}
+
 	public class PodsblitzApplication : Gtk.Application {
 
 
@@ -8,8 +18,6 @@ namespace Podsblitz {
 		protected Gtk.ListStore library;
 
 		protected Gtk.ListStore latest;
-
-		protected List<Subscription> subscriptions;
 
 		protected Database db;
 
@@ -22,16 +30,24 @@ namespace Podsblitz {
 
 			settings = new GLib.Settings("de.hannenz.podsblitz");
 
-			this.db = new Database();
+			try {
+				this.db = new Database();
+			}
+			catch (DatabaseError.OPEN_FAILED e) {
+				stderr.printf("%s\n", e.message);
+				return;
+			}
 
-			this.subscriptions = new List<Subscription>();
+			// this.subscriptions = new List<Subscription>();
 
 			this.library = new Gtk.ListStore (
-				4,
+				ListStoreColumn.N_COLUMNS,
 				typeof(string),				// Title
 				typeof(string), 			// Title shortened
 				typeof(Gdk.Pixbuf),			// Cover
-				typeof(int) 				// Position (Order)
+				typeof(int), 				// Position (Order)
+				typeof(string),				// Description
+				typeof(string) 				// URL
 			);
 
 
@@ -48,13 +64,9 @@ namespace Podsblitz {
 
 		protected override void startup() {
 
-			Gtk.TreeIter iter;
-			// Gdk.Pixbuf pixbuf1, pixbuf2, pixbuf3;
-
 			base.startup();
 
 			// Create the menu
-
 			var action = new GLib.SimpleAction("add-subscription", null);
 			action.activate.connect(addSubscription);
 			add_action(action);
@@ -64,34 +76,84 @@ namespace Podsblitz {
 			set_app_menu(app_menu);
 
 
-			var db = new Database();
-			this.subscriptions = db.getAllSubscriptions();
+			// var db = new Database();
+			var subscriptions = this.db.getAllSubscriptions();
 			
-			foreach (Subscription subscription in this.subscriptions) {
-
-				subscription.dump();
-
-				// var pixbuf = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/Downloads/90b94565-0091-46e2-9b1b-52b53e1eb051.png.jpeg", 200, 200);
-				this.library.append(out iter);
-				this.library.set(iter,
-								 0, Markup.escape_text(subscription.title), 
-								 1, Markup.escape_text(truncate(subscription.title, 200)),
-								 2, subscription.cover,
-								 3, subscription.pos
-								 -1);
-				subscription.iter = iter;
-				subscription.changed.connect( (sub) => {
-					this.library.set(sub.iter,
-							0, Markup.escape_text(sub.title),
-							1, Markup.escape_text(truncate(sub.title, 200)),
-							2, sub.cover,
-							3, sub.pos
-							);
-					this.db.saveSubscription(sub);
-				});
+			foreach (Subscription subscription in subscriptions) {
+				registrateSubscription(subscription);
 			}
+
+
+			library.foreach((model, path, iter) => {
+				var s = getSubscription(iter);
+				s.dump();
+				return false;
+			});
+
 		}
 
+
+		private Subscription getSubscription(Gtk.TreeIter iter) {
+
+			string title, description, url;
+			int pos;
+			var subscription = new Subscription(); 
+
+			library.get(
+						iter,
+						ListStoreColumn.TITLE, out title,
+						ListStoreColumn.POSITION, out pos,
+						ListStoreColumn.DESCRIPTION, out description,
+						ListStoreColumn.URL, out url,
+						-1
+					);
+
+			subscription.title = title;
+			subscription.description = description;
+			subscription.url = url;
+			subscription.pos = pos;
+
+			return subscription;
+		}
+
+
+
+
+		/**
+		 * Add a subscription to the ListStore and connect signals
+		 *
+		 * @param Podsblitz.Subscription subscription
+		 * @return void
+		 */
+		private void registrateSubscription(Subscription subscription) {
+
+			Gtk.TreeIter iter;
+			this.library.append(out iter);
+			this.library.set(iter,
+							 ListStoreColumn.TITLE, Markup.escape_text(subscription.title), 
+							 ListStoreColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
+							 ListStoreColumn.COVER, subscription.cover,
+							 ListStoreColumn.POSITION, subscription.pos,
+							 ListStoreColumn.DESCRIPTION, subscription.description,
+							 ListStoreColumn.URL, subscription.url,
+							 -1);
+
+			subscription.iter = iter;
+
+			subscription.changed.connect((subscription) => {
+				print("Subscription has changed, saving it to db now\n");
+				this.library.set(subscription.iter,
+								 ListStoreColumn.TITLE, Markup.escape_text(subscription.title), 
+								 ListStoreColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
+								 ListStoreColumn.COVER, subscription.cover,
+								 ListStoreColumn.POSITION, subscription.pos,
+								 ListStoreColumn.DESCRIPTION, subscription.description,
+								 ListStoreColumn.URL, subscription.url,
+								 -1
+						);
+				this.db.saveSubscription(subscription);
+			});
+		}
 
 
 		protected override void activate() {
@@ -119,14 +181,6 @@ namespace Podsblitz {
 
 			// TODO: Store current selection in GSettings and read from there
 			main_window.stack.set_visible_child_name("library");
-
-
-
-			return;
- 
-			// foreach (Subscription subscription in this.subscriptions) {
-			// 	subscription.update();
-			// }
 		}
 
 
@@ -141,6 +195,9 @@ namespace Podsblitz {
 			var url = dlg.get_url();
 
 			var subscription = new Subscription();
+
+			registrateSubscription(subscription);
+
 			subscription.subscribe(url);
 		}
 

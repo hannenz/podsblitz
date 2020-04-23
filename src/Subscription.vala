@@ -2,36 +2,41 @@ namespace Podsblitz {
 
 	public class Subscription {
 
+		public int id { get; set; }
 		public string title { get; set; }
 		public string description { get; set; }
-		public int pos;
+		public string url { get; set; }
 
-		protected string _url;
-		public string url { 
-			get { return _url; }
-			set {
-				this._url = value;
-				// this.readRss();
-			}
-		}
+		public int pos;
 
 		protected uint8[] xml;
 
 		protected List<Episode> episodes;
 
-		public Gdk.Pixbuf cover;
-		public Gdk.Pixbuf cover_large;
-		public Gdk.Pixbuf cover_small;
+		public Gdk.Pixbuf cover; 				// Original size
+		public Gdk.Pixbuf cover_large; 			// 300px
+		public Gdk.Pixbuf cover_medium; 		// 150px
+		public Gdk.Pixbuf cover_small; 			// 90px
 
-		public Gtk.TreeIter iter; 		// Iter referencing this subscription inside the Model (IconView)
+		public Gtk.TreeIter iter; 				// Iter referencing this subscription inside the Model (IconView)
 
-		public signal void changed(Subscription subscription);
 		protected Database db;
 
 
+		public signal void changed(Subscription subscription);
+
+
 		public Subscription() {
+
 			this.episodes = new List<Episode>();
-			this.db = new Database();
+
+			try {
+				this.db = new Database();
+			}
+			catch (DatabaseError.OPEN_FAILED e) {
+				stderr.printf("%s\n", e.message);
+				return;
+			}
 		}
 
 
@@ -47,6 +52,8 @@ namespace Podsblitz {
 
 
 		public bool create(string url) {
+			this.url = url;
+			this.fetch();
 			this.db.saveSubscription(this);
 			return true;
 		}
@@ -55,10 +62,27 @@ namespace Podsblitz {
 		/**
 		 * Update and save a subscription
 		 */
-		public void update() {
-			print("Updating: %s\n", this._url);
-			this.readRss();
-			this.db.saveSubscription(this);
+		public void fetch() {
+			print("Fetching subscription data from XML at %s\n", this.url);
+
+			print("Loading XML from %s\n", this.url);
+
+			var file = GLib.File.new_for_uri(this.url); 
+
+			file.load_contents_async.begin(null, (obj, res) => {
+				try {
+					uint8[] contents;
+					string etag_out;
+
+					file.load_contents_async.end(res, out contents, out etag_out);
+					this.readXml((string)contents);
+					// this.db.saveSubscription(this);
+					this.changed(this);
+				}
+				catch (Error e) {
+					stdout.printf("Failed to load %s: %s\n", this.url, e.message);
+				}
+			});
 		}
 
 
@@ -70,23 +94,6 @@ namespace Podsblitz {
 
 
 		protected void readRss() {
-			print("Loading XML from %s\n", this._url);
-
-			var file = GLib.File.new_for_uri(this._url); 
-
-			file.load_contents_async.begin(null, (obj, res) => {
-				try {
-					uint8[] contents;
-					string etag_out;
-
-					file.load_contents_async.end(res, out contents, out etag_out);
-					this.readXml((string)contents);
-
-				}
-				catch (Error e) {
-					stdout.printf("Failed to load %s: %s\n", this._url, e.message);
-				}
-			});
 		}
 
 
@@ -94,17 +101,18 @@ namespace Podsblitz {
 			Xml.Parser.init();
 			Xml.Doc* doc = Xml.Parser.parse_memory((string)xml, xml.length);
 			if (doc == null) {
-				stdout.printf("[DOC] Failed to parse RSS Feed at %s\n", this._url);
+				stdout.printf("[DOC] Failed to parse RSS Feed at %s\n", this.url);
 			}
 
 			var ctx = new Xml.XPath.Context(doc);
 			if (ctx == null) {
-				stdout.printf("[CTX] Failed to parse RSS Feed at %s\n", this._url);
+				stdout.printf("[CTX] Failed to parse RSS Feed at %s\n", this.url);
 			}
 
 			this.title = this.getXPath(ctx, "/rss/channel/title");
 			this.description = this.getXPath(ctx, "/rss/channel/description");
 			var imageurl = this.getXPath(ctx, "/rss/channel/image/url");
+
 			print("Found image at %s\n", imageurl);
 
 
@@ -142,9 +150,12 @@ namespace Podsblitz {
 
 
 		public void dump() {
-			print("Subscription: %s\n", this.title);
+
+			print("--- Subscription Dump ---\n");
+			print("Title: %s\n", this.title);
 			print("URL: %s\n", this.url);
 			print("Description: %s\n", this.description);
+			print("-------------------------\n");
 
 			foreach (var episode in this.episodes) {
 				episode.dump();

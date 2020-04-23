@@ -1,5 +1,10 @@
 using Sqlite; 
+using Gee;
 
+public errordomain DatabaseError {
+	OPEN_FAILED,
+	QUERY_FAILED
+}
 
 namespace Podsblitz {
 
@@ -7,34 +12,78 @@ namespace Podsblitz {
 
 		protected Sqlite.Database db;
 
-
-		public Database() {
-			this.open();
-		}
+		protected Sqlite.Statement statement;
 
 
-		public void open() {
+		public Database() throws DatabaseError.OPEN_FAILED {
 
 			int ret;
 			var dbfile = "/home/hannenz/podsblitz/data/podsblitz.db";
 
 			ret = Sqlite.Database.open(dbfile, out this.db);
 			if (ret != Sqlite.OK) {
-				stdout.printf("Failed to open sqlite database at %s\n", dbfile);
-				// throw new Error("Failed to open sqlite database at %s", dbfile);
+				throw new DatabaseError.OPEN_FAILED("Failed to open sqlite database at %s\n".printf(dbfile));
 			}
 		}
 
+
+
+		/**
+		 * Execute a query
+		 *
+		 * @param string query
+		 * @return void
+		 * @throws Error
+		 */
+		public void query(string query) throws DatabaseError.QUERY_FAILED {
+			int ret;
+
+			ret = this.db.prepare_v2(query, query.length, out statement);
+			if (ret != Sqlite.OK) {
+				throw new DatabaseError.QUERY_FAILED("Error: %d: %s\n".printf(db.errcode(), db.errmsg()));
+			}
+		}
+
+
+
+		public Gee.HashMap getOne() {
+			int cols, i;
+			var result = new HashMap<string, string>();
+
+			cols = statement.column_count();
+			if (statement.step() == Sqlite.ROW) {
+
+				for (i = 0; i < cols; i++) {
+
+					string column_name = statement.column_name(i) ?? "<none>";
+					int type = statement.column_type(i);
+
+					switch (type) {
+						case Sqlite.INTEGER:
+							result.set(column_name, statement.column_int(i).to_string());
+							break;
+
+						case Sqlite.TEXT:
+						default:
+							result.set(column_name, statement.column_text(i));
+							break;
+					}
+				}
+			}
+
+			return result;
+		}
 		
+
 
 		/**
 		 * Get all subscriptions from database
 		 *
 		 * @return List<Podsblitz.Subscription>
 		 */
-		public List<Subscription> getAllSubscriptions() {
+		public GLib.List<Subscription> getAllSubscriptions() {
 
-			var subscriptions = new List<Subscription>();
+			var subscriptions = new GLib.List<Subscription>();
 
 			int ret;
 			Sqlite.Statement stmt;
@@ -101,6 +150,8 @@ namespace Podsblitz {
 			string query;
 			string error_message;
 			uint8[] buffer;
+
+			subscription.dump();
 
 			try {
 				subscription.cover.save_to_buffer(out buffer, "png");

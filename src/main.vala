@@ -14,6 +14,21 @@
  */
 public static int main(string[] args) {
 
+	// var db = new Podsblitz.Database();
+	// db.open();
+    //
+	// var subscription = new Podsblitz.Subscription();
+    //
+	// db.query("SELECT * FROM Subscriptions WHERE id=1");
+	// Gee.HashMap<string,string> result = db.getOne();
+    //
+	// subscription.title = result["title"];
+	// subscription.url = result["url"];
+	// subscription.description = result["description"];
+	// subscription.dump();
+	// return 0;
+
+
 	var app = new Podsblitz.PodsblitzApplication();
 	return app.run(args);
 }

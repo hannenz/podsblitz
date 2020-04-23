@@ -23,7 +23,8 @@ dependencies = [
 	# dependency('libgda-5.0'),
 	# dependency('libxml-2.0')
 	dependency('sqlite3'),
-	dependency('libxml-2.0')
+	dependency('libxml-2.0'),
+	dependency('gee-0.8')
 ]
 
 executable(

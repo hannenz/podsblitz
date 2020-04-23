@@ -18,8 +18,8 @@ namespace Podsblitz {
 
 			var paned = new Gtk.Paned(Gtk.Orientation.HORIZONTAL);
 
-			default_height = 600;
-			default_width = 600;
+			// default_height = 600;
+			// default_width = 600;
 
 			// var vbox = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
 			// vbox.margin = 4;
@@ -28,8 +28,9 @@ namespace Podsblitz {
 			stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT);
 
 			var icon_view = new Gtk.IconView.with_model(this.app.get_library());
-			icon_view.set_markup_column(1);
-			icon_view.set_pixbuf_column(2);
+			icon_view.set_markup_column(ListStoreColumn.TITLE);
+			icon_view.set_pixbuf_column(ListStoreColumn.COVER);
+			icon_view.set_tooltip_column(Podsblitz.ListStoreColumn.DESCRIPTION);
 			icon_view.set_item_width(64);
 			icon_view.set_item_padding(0);
 			icon_view.reorderable = true;
