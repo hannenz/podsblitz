@@ -39,6 +39,25 @@ namespace Podsblitz {
 			}
 		}
 
+		public Subscription.from_hash_map(Gee.HashMap<string, string> map) {
+			title = map["title"];
+			description = map["description"];
+			url = map["url"];
+			uint8[] buffer;
+
+			try {
+				buffer = Base64.decode(map["cover"]);
+				var istream = new MemoryInputStream.from_data(buffer, GLib.free);
+				cover = new Gdk.Pixbuf.from_stream(istream, null);
+				cover_large = new Gdk.Pixbuf.from_stream_at_scale(istream, Podsblitz.CoverSize.LARGE, -1, true, null);
+				cover_medium = new Gdk.Pixbuf.from_stream_at_scale(istream, Podsblitz.CoverSize.MEDIUM, -1, true, null);
+				cover_small = new Gdk.Pixbuf.from_stream_at_scale(istream, Podsblitz.CoverSize.SMALL, -1, true, null);
+			}
+			catch (Error e) {
+				stderr.printf("Error: %s\n", e.message);
+			}
+		}
+
 
 		/**
 		 * Subscribe to a new podcast
@@ -136,6 +155,8 @@ namespace Podsblitz {
 			// this.changed(this);
 		}
 
+
+
 		protected string? getXPath(Xml.XPath.Context ctx, string xpath) {
 			Xml.XPath.Object *obj = ctx.eval_expression(xpath);
 			if (obj == null) {
@@ -147,6 +168,47 @@ namespace Podsblitz {
 			}
 			return (node != null) ? node->get_content() : null;
 		}
+
+
+
+		public void save() {
+			string query;
+			uint8[] buffer;
+
+			try {
+
+				this.cover.save_to_buffer(out buffer, "png");
+
+				// UPSERT: https://stackoverflow.com/a/38463024
+				query = "UPDATE subscriptions  SET title='%s', description='%s', url='%s', pos=%u, cover='%s' WHERE url='%s'".printf(
+					this.title,
+					this.description,
+					this.url,
+					this.pos,
+					Base64.encode(buffer),
+					this.url
+					);
+
+				this.db.query(query);
+
+				query = "INSERT INTO subscriptions (title, description, url, pos, cover) SELECT '%s', '%s', '%s', %u, '%s' WHERE (Select Changes() = 0)".printf(
+					this.title,
+					this.description,
+					this.url,
+					this.pos,
+					Base64.encode(buffer)
+					);
+
+				this.db.query(query);
+			}
+			catch (DatabaseError.QUERY_FAILED e) {
+				print("Database Error: %s\n", e.message);
+			}
+			catch (Error e) {
+				print("Error: %s\n", e.message);
+			}
+		}
+
 
 
 		public void dump() {

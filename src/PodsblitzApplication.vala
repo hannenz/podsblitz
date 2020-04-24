@@ -10,6 +10,12 @@ namespace Podsblitz {
 		N_COLUMNS
 	}
 
+	enum CoverSize {
+		SMALL = 90,
+		MEDIUM = 150,
+		LARGE = 300
+	}
+
 	public class PodsblitzApplication : Gtk.Application {
 
 
@@ -76,10 +82,31 @@ namespace Podsblitz {
 			set_app_menu(app_menu);
 
 
+
+
+			// Test
+
+			var subscriptions = new GLib.List<Subscription>();
+
+			this.db.query("SELECT * FROM subscriptions");
+			var results = this.db.getAll();
+			foreach (Gee.HashMap result in results) {
+
+				var subscription = new Subscription.from_hash_map(result);
+				subscription.dump();
+				subscriptions.append(subscription);
+
+			}
+			
+			// End Test
+
+
+
 			// var db = new Database();
-			var subscriptions = this.db.getAllSubscriptions();
+			// var subscriptions = this.db.getAllSubscriptions();
 			
 			foreach (Subscription subscription in subscriptions) {
+				subscription.dump();
 				registrateSubscription(subscription);
 			}
 
