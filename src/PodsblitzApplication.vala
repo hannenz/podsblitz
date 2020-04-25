@@ -84,7 +84,7 @@ namespace Podsblitz {
 
 
 
-			// Test
+			// Load subscriptions from database
 
 			var subscriptions = new GLib.List<Subscription>();
 
@@ -93,18 +93,13 @@ namespace Podsblitz {
 			foreach (Gee.HashMap result in results) {
 
 				var subscription = new Subscription.from_hash_map(result);
+				subscription.fetch();
 				subscription.dump();
 				subscriptions.append(subscription);
-
 			}
 			
-			// End Test
-
-
-
-			// var db = new Database();
-			// var subscriptions = this.db.getAllSubscriptions();
 			
+			// Put them into list-store and listen for changes
 			foreach (Subscription subscription in subscriptions) {
 				subscription.dump();
 				registrateSubscription(subscription);

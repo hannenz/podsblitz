@@ -22,6 +22,8 @@ namespace Podsblitz {
 
 		protected Database db;
 
+		private bool isItem;
+
 
 		public signal void changed(Subscription subscription);
 
@@ -79,7 +81,7 @@ namespace Podsblitz {
 
 
 		/**
-		 * Update and save a subscription
+		 * Update a subscription from online
 		 */
 		public void fetch() {
 			print("Fetching subscription data from XML at %s\n", this.url);
@@ -153,6 +155,39 @@ namespace Podsblitz {
 			});
 
 			// this.changed(this);
+
+
+			// Fetch episodes
+
+			getXPath(ctx, "/item");
+
+			var root_element = doc->get_root_element();
+			parse_node(root_element);
+		}
+
+
+
+		private void parse_node(Xml.Node *node) {
+
+			this.isItem = false;
+
+			for (Xml.Node *iter = node->children; iter != null; iter = iter->next) {
+
+				if (iter->type != Xml.ElementType.ELEMENT_NODE) {
+					continue;
+				}
+
+				if (iter->name == "item") {
+
+					print("Found episode:\n");
+
+					var episode = new Episode.from_xml_node(iter);
+					this.episodes.append(episode);
+					episode.dump();
+				}
+
+				parse_node(iter);
+			}
 		}
 
 
