@@ -1,6 +1,6 @@
 namespace Podsblitz {
 
-	public class Subscription {
+	public class Subscription : Object {
 
 		public int id { get; set; }
 		public string title { get; set; }
@@ -10,6 +10,7 @@ namespace Podsblitz {
 		public int pos;
 
 		protected uint8[] xml;
+		protected Xml.Doc *xml_doc { get; set; default = null; }
 
 		protected List<Episode> episodes;
 
@@ -25,7 +26,7 @@ namespace Podsblitz {
 		private bool isItem;
 
 
-		public signal void changed(Subscription subscription);
+		public signal void changed();
 
 
 		public Subscription() {
@@ -39,8 +40,24 @@ namespace Podsblitz {
 				stderr.printf("%s\n", e.message);
 				return;
 			}
+
+			// When cover changes, automatically update / create diff. sizes
+			this.notify["cover"].connect( (source, property) => {
+				print("Updating cover size\n");
+				cover_large = cover.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
+				cover_medium = cover.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
+				cover_small = cover.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
+			});
+
+			Xml.Parser.init();
 		}
 
+
+
+		/**
+		 * Constructor from HashMap
+		 * When loading from db we get a HashMap
+		 */
 		public Subscription.from_hash_map(Gee.HashMap<string, string> map) {
 			title = map["title"];
 			description = map["description"];
@@ -48,17 +65,22 @@ namespace Podsblitz {
 			uint8[] buffer;
 
 			try {
-				buffer = Base64.decode(map["cover"]);
-				var istream = new MemoryInputStream.from_data(buffer, GLib.free);
-				cover = new Gdk.Pixbuf.from_stream(istream, null);
-				cover_large = new Gdk.Pixbuf.from_stream_at_scale(istream, Podsblitz.CoverSize.LARGE, -1, true, null);
-				cover_medium = new Gdk.Pixbuf.from_stream_at_scale(istream, Podsblitz.CoverSize.MEDIUM, -1, true, null);
-				cover_small = new Gdk.Pixbuf.from_stream_at_scale(istream, Podsblitz.CoverSize.SMALL, -1, true, null);
+				if (map["cover"] == "") {
+					cover = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/podsblitz/data/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM);
+				}
+				else {
+					buffer = Base64.decode(map["cover"]);
+					var istream = new MemoryInputStream.from_data(buffer, GLib.free);
+					cover = new Gdk.Pixbuf.from_stream_at_scale(istream, CoverSize.MEDIUM, CoverSize.MEDIUM, true, null);
+				}
+
+
 			}
 			catch (Error e) {
 				stderr.printf("Error: %s\n", e.message);
 			}
 		}
+
 
 
 		/**
@@ -68,77 +90,66 @@ namespace Podsblitz {
 		 * @return bool
 		 */
 		public bool subscribe(string url) {
-			return this.create(url);
-		}
-
-
-		public bool create(string url) {
 			this.url = url;
 			this.fetch();
-			this.db.saveSubscription(this);
+			this.save();
 			return true;
 		}
+
 
 
 		/**
 		 * Update a subscription from online
 		 */
 		public void fetch() {
+
 			print("Fetching subscription data from XML at %s\n", this.url);
+			loadXml();
+			readXml();
+			fetchCover();
+		}
 
-			print("Loading XML from %s\n", this.url);
 
-			var file = GLib.File.new_for_uri(this.url); 
 
-			file.load_contents_async.begin(null, (obj, res) => {
+		public void loadXml() {
+
+			if (xml_doc != null) {
+				return;
+			}
+
+			var file = File.new_for_uri(url);
+			file.load_contents_async.begin(null, (ob, res) => {
 				try {
-					uint8[] contents;
 					string etag_out;
 
-					file.load_contents_async.end(res, out contents, out etag_out);
-					this.readXml((string)contents);
-					// this.db.saveSubscription(this);
-					this.changed(this);
+					file.load_contents_async.end(res, out xml, out etag_out);
+
+					xml_doc = Xml.Parser.parse_memory((string)xml, xml.length);
+					if (xml_doc == null) {
+						stderr.printf("[DOC] Failed to parse RSS Feed at %s\n", this.url);
+					}
 				}
 				catch (Error e) {
-					stdout.printf("Failed to load %s: %s\n", this.url, e.message);
+					stderr.printf("Error: %s\n", e.message);
 				}
 			});
 		}
 
 
 
-		public void setCover(string coverfile) throws Error {
-			this.cover_large = new Gdk.Pixbuf.from_file_at_size(coverfile, 200, 200);
-			this.cover_small = new Gdk.Pixbuf.from_file_at_size(coverfile, 96, 96) ;
-		}
+		public void fetchCover() {
 
+			loadXml();
 
-		protected void readRss() {
-		}
-
-
-		protected void readXml(string xml) {
-			Xml.Parser.init();
-			Xml.Doc* doc = Xml.Parser.parse_memory((string)xml, xml.length);
-			if (doc == null) {
-				stdout.printf("[DOC] Failed to parse RSS Feed at %s\n", this.url);
+			var imageurl = get_xpath("/rss/channel/image/url");
+			if (imageurl == null) {
+				stderr.printf("No image url\n");
+				return;
 			}
 
-			var ctx = new Xml.XPath.Context(doc);
-			if (ctx == null) {
-				stdout.printf("[CTX] Failed to parse RSS Feed at %s\n", this.url);
-			}
-
-			this.title = this.getXPath(ctx, "/rss/channel/title");
-			this.description = this.getXPath(ctx, "/rss/channel/description");
-			var imageurl = this.getXPath(ctx, "/rss/channel/image/url");
-
-			print("Found image at %s\n", imageurl);
-
+			print("Loading image from %s\n", imageurl);
 
 			File imagefile = File.new_for_uri(imageurl);
-			print("Loading file\n");
 
 			imagefile.load_contents_async.begin(null, (obj, res) => {
 				try {
@@ -146,23 +157,30 @@ namespace Podsblitz {
 					string etag_out;
 					imagefile.load_contents_async.end(res, out contents, out etag_out);
 					InputStream istream= new MemoryInputStream.from_data(contents, GLib.free);
-					this.cover = new Gdk.Pixbuf.from_stream_at_scale(istream, 300, -1, true, null);
-					this.changed(this);
+					cover = new Gdk.Pixbuf.from_stream_at_scale(istream, CoverSize.LARGE, -1, true, null);
+					print("Loaded image successfully from %s\n", imageurl);
+
+					changed();
 				}
 				catch (Error e) {
-					print("Error: %s\n", e.message);
+					stderr.printf("Error loading image: %s\n", e.message);
 				}
 			});
+		}
 
-			// this.changed(this);
 
+
+
+
+
+		protected void readXml() {
+
+			title = get_xpath("/rss/channel/title");
+			description = get_xpath("/rss/channel/description");
+			dump();
 
 			// Fetch episodes
-
-			getXPath(ctx, "/item");
-
-			var root_element = doc->get_root_element();
-			parse_node(root_element);
+			parse_node(xml_doc->get_root_element());
 		}
 
 
@@ -179,11 +197,11 @@ namespace Podsblitz {
 
 				if (iter->name == "item") {
 
-					print("Found episode:\n");
+					// print("Found episode:\n");
 
 					var episode = new Episode.from_xml_node(iter);
 					this.episodes.append(episode);
-					episode.dump();
+					// episode.dump();
 				}
 
 				parse_node(iter);
@@ -192,27 +210,38 @@ namespace Podsblitz {
 
 
 
-		protected string? getXPath(Xml.XPath.Context ctx, string xpath) {
+		protected string? get_xpath(string xpath) {
+
+			var ctx = new Xml.XPath.Context(xml_doc);
+			if (ctx == null) {
+				return null;
+			}
+
 			Xml.XPath.Object *obj = ctx.eval_expression(xpath);
 			if (obj == null) {
 				return null;
 			}
+
 			Xml.Node *node = null;
 			if (obj->nodesetval != null && obj->nodesetval->item(0) != null) {
 				node = obj->nodesetval->item(0);
 			}
+
 			return (node != null) ? node->get_content() : null;
 		}
 
 
 
 		public void save() {
+
 			string query;
-			uint8[] buffer;
+			uint8[] buffer = { 0 };
 
 			try {
 
-				this.cover.save_to_buffer(out buffer, "png");
+				if (this.cover != null) {
+					this.cover.save_to_buffer(out buffer, "png");
+				}
 
 				// UPSERT: https://stackoverflow.com/a/38463024
 				query = "UPDATE subscriptions  SET title='%s', description='%s', url='%s', pos=%u, cover='%s' WHERE url='%s'".printf(

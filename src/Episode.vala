@@ -38,13 +38,10 @@ namespace Podsblitz {
 					case "pubDate":
 						var rfc2822_string = item_iter->get_content();
 
-						var time = new Time();
-						time.strptime(rfc2822_string, "%D, %d %M %Y %H:%M:%S");
-						this.pubdate = DateTime.from_unix(time.mktime());
+						// Is this really the way to go ?!?
+						pubdate = new DateTime.from_iso8601(new Soup.Date.from_string(rfc2822_string).to_string(Soup.DateFormat.ISO8601), null);
 						break;
 
-
-					
 				}
 			}
 		}

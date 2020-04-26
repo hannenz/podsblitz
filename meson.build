@@ -24,7 +24,8 @@ dependencies = [
 	# dependency('libxml-2.0')
 	dependency('sqlite3'),
 	dependency('libxml-2.0'),
-	dependency('gee-0.8')
+	dependency('gee-0.8'),
+	dependency('libsoup-2.4')
 ]
 
 executable(

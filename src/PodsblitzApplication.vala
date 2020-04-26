@@ -76,41 +76,36 @@ namespace Podsblitz {
 			var action = new GLib.SimpleAction("add-subscription", null);
 			action.activate.connect(addSubscription);
 			add_action(action);
+			action = new GLib.SimpleAction("update-subscriptions", null);
+			action.activate.connect(updateSubscriptions);
+			add_action(action);
 
 			Menu app_menu = new Menu();
 			app_menu.append("Add a podcast", "app.add-subscription");
+			app_menu.append("Update all", "app.update-subscriptions");
 			set_app_menu(app_menu);
 
 
 
 
+
 			// Load subscriptions from database
+			try {
+				this.db.query("SELECT * FROM subscriptions");
+				var results = this.db.getAll();
+				foreach (Gee.HashMap result in results) {
 
-			var subscriptions = new GLib.List<Subscription>();
+					var subscription = new Subscription.from_hash_map(result);
+					// subscription.fetch();
+					// subscription.dump();
 
-			this.db.query("SELECT * FROM subscriptions");
-			var results = this.db.getAll();
-			foreach (Gee.HashMap result in results) {
-
-				var subscription = new Subscription.from_hash_map(result);
-				subscription.fetch();
-				subscription.dump();
-				subscriptions.append(subscription);
+					// Add to ListStore and listen for changes
+					registrateSubscription(subscription);
+				}
 			}
-			
-			
-			// Put them into list-store and listen for changes
-			foreach (Subscription subscription in subscriptions) {
-				subscription.dump();
-				registrateSubscription(subscription);
+			catch (DatabaseError e) {
+				stderr.printf("Database error: %s\n", e.message);
 			}
-
-
-			library.foreach((model, path, iter) => {
-				var s = getSubscription(iter);
-				s.dump();
-				return false;
-			});
 
 		}
 
@@ -163,7 +158,7 @@ namespace Podsblitz {
 			subscription.iter = iter;
 
 			subscription.changed.connect((subscription) => {
-				print("Subscription has changed, saving it to db now\n");
+				print("Subscription has changed, updating TreeStore and saving it to db now\n");
 				this.library.set(subscription.iter,
 								 ListStoreColumn.TITLE, Markup.escape_text(subscription.title), 
 								 ListStoreColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
@@ -173,7 +168,7 @@ namespace Podsblitz {
 								 ListStoreColumn.URL, subscription.url,
 								 -1
 						);
-				this.db.saveSubscription(subscription);
+				subscription.save();
 			});
 		}
 
@@ -223,6 +218,22 @@ namespace Podsblitz {
 			subscription.subscribe(url);
 		}
 
+
+		/**
+		 * Update all subscriptions
+		 */
+		public void updateSubscriptions() {
+
+			library.foreach((model, path, iter) => {
+				if (path.to_string() == "2") {
+					var subscription = getSubscription(iter);
+					print("Updating subscription: %s %s (%s)\n", path.to_string(), subscription.title, subscription.url);
+					subscription.fetch();
+				}
+				return false;
+			});
+
+		}
 
 		public void updateStream() {
 		}
