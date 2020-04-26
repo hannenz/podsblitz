@@ -87,8 +87,6 @@ namespace Podsblitz {
 
 
 
-
-
 			// Load subscriptions from database
 			try {
 				this.db.query("SELECT * FROM subscriptions");
@@ -225,7 +223,7 @@ namespace Podsblitz {
 		public void updateSubscriptions() {
 
 			library.foreach((model, path, iter) => {
-				if (path.to_string() == "2") {
+				if (path.to_string() == "3") {
 					var subscription = getSubscription(iter);
 					print("Updating subscription: %s %s (%s)\n", path.to_string(), subscription.title, subscription.url);
 					subscription.fetch();

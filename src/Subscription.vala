@@ -103,84 +103,86 @@ namespace Podsblitz {
 		 */
 		public void fetch() {
 
-			print("Fetching subscription data from XML at %s\n", this.url);
-			loadXml();
-			readXml();
-			fetchCover();
+			print("Fetching subscription data from XML at %s\n", url);
+			read_xml();
+			fetch_cover();
 		}
 
 
 
-		public void loadXml() {
+		public async void load_xml_async() {
 
 			if (xml_doc != null) {
 				return;
 			}
 
-			var file = File.new_for_uri(url);
-			file.load_contents_async.begin(null, (ob, res) => {
-				try {
-					string etag_out;
+			try {
+				string etag_out;
 
-					file.load_contents_async.end(res, out xml, out etag_out);
+				var file = File.new_for_uri(url);
+				yield file.load_contents_async(null, out xml, out etag_out);
 
-					xml_doc = Xml.Parser.parse_memory((string)xml, xml.length);
-					if (xml_doc == null) {
-						stderr.printf("[DOC] Failed to parse RSS Feed at %s\n", this.url);
-					}
+				xml_doc = Xml.Parser.parse_memory((string)xml, xml.length);
+				if (xml_doc == null) {
+					stderr.printf("[DOC] Failed to parse RSS Feed at %s\n", url);
 				}
-				catch (Error e) {
-					stderr.printf("Error: %s\n", e.message);
-				}
-			});
-		}
-
-
-
-		public void fetchCover() {
-
-			loadXml();
-
-			var imageurl = get_xpath("/rss/channel/image/url");
-			if (imageurl == null) {
-				stderr.printf("No image url\n");
-				return;
 			}
+			catch (Error e) {
+				stderr.printf("Error: %s\n", e.message);
+			}
+		}
 
-			print("Loading image from %s\n", imageurl);
 
-			File imagefile = File.new_for_uri(imageurl);
 
-			imagefile.load_contents_async.begin(null, (obj, res) => {
-				try {
-					uint8[] contents;
-					string etag_out;
-					imagefile.load_contents_async.end(res, out contents, out etag_out);
-					InputStream istream= new MemoryInputStream.from_data(contents, GLib.free);
-					cover = new Gdk.Pixbuf.from_stream_at_scale(istream, CoverSize.LARGE, -1, true, null);
-					print("Loaded image successfully from %s\n", imageurl);
+		protected void read_xml() {
 
-					changed();
-				}
-				catch (Error e) {
-					stderr.printf("Error loading image: %s\n", e.message);
-				}
+			load_xml_async.begin((obj, res) => {
+				load_xml_async.end(res);
+
+				title = get_xpath("/rss/channel/title");
+				description = get_xpath("/rss/channel/description");
+				dump();
+
+				// Fetch episodes
+				parse_node(xml_doc->get_root_element());
+
+				changed();
 			});
 		}
 
 
 
+		public void fetch_cover() {
 
+			load_xml_async.begin((obj, res) => {
+				load_xml_async.end(res);
 
+				var imageurl = get_xpath("/rss/channel/image/url");
+				if (imageurl == null) {
+					stderr.printf("No image url\n");
+					return;
+				}
 
-		protected void readXml() {
+				print("Loading image from %s\n", imageurl);
 
-			title = get_xpath("/rss/channel/title");
-			description = get_xpath("/rss/channel/description");
-			dump();
+				File imagefile = File.new_for_uri(imageurl);
 
-			// Fetch episodes
-			parse_node(xml_doc->get_root_element());
+				imagefile.load_contents_async.begin(null, (obj, res) => {
+					try {
+						uint8[] contents;
+						string etag_out;
+						imagefile.load_contents_async.end(res, out contents, out etag_out);
+						InputStream istream= new MemoryInputStream.from_data(contents, GLib.free);
+						cover = new Gdk.Pixbuf.from_stream_at_scale(istream, CoverSize.LARGE, -1, true, null);
+						print("Loaded image successfully from %s\n", imageurl);
+
+						changed();
+					}
+					catch (Error e) {
+						stderr.printf("Error loading image: %s\n", e.message);
+					}
+				});
+			});
 		}
 
 
