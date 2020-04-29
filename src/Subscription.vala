@@ -59,6 +59,7 @@ namespace Podsblitz {
 		 * When loading from db we get a HashMap
 		 */
 		public Subscription.from_hash_map(Gee.HashMap<string, string> map) {
+			id = int.parse(map["id"]);
 			title = map["title"];
 			description = map["description"];
 			url = map["url"];
@@ -279,13 +280,13 @@ namespace Podsblitz {
 
 		public void dump() {
 
-			print("--- Subscription Dump ---\n");
-			print("Title: %s\n", this.title);
-			print("URL: %s\n", this.url);
-			print("Description: %s\n", this.description);
-			print("-------------------------\n");
+			print("\n--- Subscription Dump ---\n");
+			print("ID:          %u\n", id);
+			print("Title:       %s\n", title);
+			print("URL:         %s\n", url);
+			print("Description: %s\n\n", description);
 
-			foreach (var episode in this.episodes) {
+			foreach (var episode in episodes) {
 				episode.dump();
 			}
 		}

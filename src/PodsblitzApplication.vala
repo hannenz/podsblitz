@@ -1,6 +1,7 @@
 namespace Podsblitz {
 
 	enum ListStoreColumn {
+		ID,
 		TITLE,
 		TITLE_SHORT,
 		COVER,
@@ -48,6 +49,7 @@ namespace Podsblitz {
 
 			this.library = new Gtk.ListStore (
 				ListStoreColumn.N_COLUMNS,
+				typeof(int), 				// ID (database)
 				typeof(string),				// Title
 				typeof(string), 			// Title shortened
 				typeof(Gdk.Pixbuf),			// Cover
@@ -74,31 +76,42 @@ namespace Podsblitz {
 
 			// Create the menu
 			var action = new GLib.SimpleAction("add-subscription", null);
-			action.activate.connect(addSubscription);
-			add_action(action);
-			action = new GLib.SimpleAction("update-subscriptions", null);
-			action.activate.connect(updateSubscriptions);
+			action.activate.connect(add_subscription);
 			add_action(action);
 
-			Menu app_menu = new Menu();
+			action = new GLib.SimpleAction("update-subscriptions", null);
+			action.activate.connect(update_subscriptions);
+			add_action(action);
+
+			var app_menu = new Menu();
 			app_menu.append("Add a podcast", "app.add-subscription");
 			app_menu.append("Update all", "app.update-subscriptions");
 			set_app_menu(app_menu);
 
+			load_subscriptions();
+
+			library.foreach( (model, path, iter) => {
+				var subscription = get_subscription(iter);
+				subscription.dump();
+				return false;
+			});
+		}
 
 
-			// Load subscriptions from database
+		// Load subscriptions from database
+		protected void load_subscriptions() {
+
 			try {
 				this.db.query("SELECT * FROM subscriptions");
 				var results = this.db.getAll();
-				foreach (Gee.HashMap result in results) {
+				foreach (Gee.HashMap<string,string> result in results) {
 
 					var subscription = new Subscription.from_hash_map(result);
 					// subscription.fetch();
 					// subscription.dump();
 
 					// Add to ListStore and listen for changes
-					registrateSubscription(subscription);
+					registrate_subscription(subscription);
 				}
 			}
 			catch (DatabaseError e) {
@@ -108,7 +121,7 @@ namespace Podsblitz {
 		}
 
 
-		private Subscription getSubscription(Gtk.TreeIter iter) {
+		private Subscription get_subscription(Gtk.TreeIter iter) {
 
 			string title, description, url;
 			int pos;
@@ -140,11 +153,12 @@ namespace Podsblitz {
 		 * @param Podsblitz.Subscription subscription
 		 * @return void
 		 */
-		private void registrateSubscription(Subscription subscription) {
+		private void registrate_subscription(Subscription subscription) {
 
 			Gtk.TreeIter iter;
 			this.library.append(out iter);
 			this.library.set(iter,
+							 ListStoreColumn.ID, subscription.id,
 							 ListStoreColumn.TITLE, Markup.escape_text(subscription.title), 
 							 ListStoreColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
 							 ListStoreColumn.COVER, subscription.cover,
@@ -158,6 +172,7 @@ namespace Podsblitz {
 			subscription.changed.connect((subscription) => {
 				print("Subscription has changed, updating TreeStore and saving it to db now\n");
 				this.library.set(subscription.iter,
+								 ListStoreColumn.ID, subscription.id,
 								 ListStoreColumn.TITLE, Markup.escape_text(subscription.title), 
 								 ListStoreColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
 								 ListStoreColumn.COVER, subscription.cover,
@@ -199,7 +214,7 @@ namespace Podsblitz {
 		}
 
 
-		public void addSubscription() {
+		public void add_subscription() {
 			print("Activating 'Add Podcast' action\n");
 			var dlg = new AddSubscriptionDialog();
 			var ret = dlg.run();
@@ -211,7 +226,7 @@ namespace Podsblitz {
 
 			var subscription = new Subscription();
 
-			registrateSubscription(subscription);
+			registrate_subscription(subscription);
 
 			subscription.subscribe(url);
 		}
@@ -220,11 +235,12 @@ namespace Podsblitz {
 		/**
 		 * Update all subscriptions
 		 */
-		public void updateSubscriptions() {
+		public void update_subscriptions() {
+			print("Updating subsccriptions\n");
 
 			library.foreach((model, path, iter) => {
-				if (path.to_string() == "3") {
-					var subscription = getSubscription(iter);
+				if (path.to_string() == "2") {
+					var subscription = get_subscription(iter);
 					print("Updating subscription: %s %s (%s)\n", path.to_string(), subscription.title, subscription.url);
 					subscription.fetch();
 				}
@@ -233,7 +249,7 @@ namespace Podsblitz {
 
 		}
 
-		public void updateStream() {
+		public void update_stream() {
 		}
 
 

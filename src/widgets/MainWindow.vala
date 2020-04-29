@@ -34,6 +34,21 @@ namespace Podsblitz {
 			icon_view.set_item_width(64);
 			icon_view.set_item_padding(0);
 			icon_view.reorderable = true;
+			icon_view.item_activated.connect( (path) => {
+
+				string title;
+				int id;
+				Gtk.TreeIter iter;
+
+				var model = icon_view.get_model();
+				model.get_iter(out iter, path);
+				model.get(iter, 
+						  ListStoreColumn.ID, out id,
+						  ListStoreColumn.TITLE, out title,
+						  -1
+						 );
+				print("Clicked on an icon view item: %u: %s\n", id, title);
+			});
 
 			var tree_view = new Gtk.TreeView();
 			tree_view.set_model(this.app.get_latest());

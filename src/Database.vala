@@ -58,6 +58,7 @@ namespace Podsblitz {
 					string column_name = statement.column_name(i) ?? "<none>";
 					int type = statement.column_type(i);
 
+
 					switch (type) {
 						case Sqlite.INTEGER:
 							result.set(column_name, statement.column_int(i).to_string());
