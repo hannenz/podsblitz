@@ -22,5 +22,23 @@ namespace Podsblitz {
 			builder.append(appendix);
 			return builder.str;
 		}
+
+
+
+		/**
+		 * Parse a time string, e.g. duration which can be in the format "hh:mm:ss", "mm:ss", or "ss"
+		 *
+		 * @param string 		The string to be parsed
+		 * @return int 			Number of seconds
+		 */
+		public int parse_time(string str) {
+			int i, seconds = 0;
+			var parts = str.split(":", 3);
+			for (i = 0; i < parts.length; i++) {
+				seconds *= 60;
+				seconds += int.parse(parts[i]);
+			}
+			return seconds;
+		}
 	// }
 }

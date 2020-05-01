@@ -42,6 +42,10 @@ namespace Podsblitz {
 						pubdate = new DateTime.from_iso8601(new Soup.Date.from_string(rfc2822_string).to_string(Soup.DateFormat.ISO8601), null);
 						break;
 
+					case "itunes:duration":
+						 duration = parse_time(item_iter->get_content());
+						break;
+
 				}
 			}
 		}

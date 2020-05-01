@@ -28,12 +28,17 @@ namespace Podsblitz {
 
 		protected Database db;
 
+		protected List<Subscription> subscriptions;
+
+
 
 		public static PodsblitzApplication() {
 			Object(
 				application_id: "de.hannenz.podsblitz",
 				flags: ApplicationFlags.FLAGS_NONE
 			);
+
+			subscriptions = new List<Subscription>();
 
 			settings = new GLib.Settings("de.hannenz.podsblitz");
 
@@ -90,11 +95,14 @@ namespace Podsblitz {
 
 			load_subscriptions();
 
-			library.foreach( (model, path, iter) => {
-				var subscription = get_subscription(iter);
-				subscription.dump();
-				return false;
-			});
+			update_subscriptions();
+
+			// library.foreach( (model, path, iter) => {
+			// 	var subscription = get_subscription(iter);
+			// 	subscription.dump();
+			// 	return false;
+			// });
+
 		}
 
 
@@ -111,6 +119,7 @@ namespace Podsblitz {
 					// subscription.dump();
 
 					// Add to ListStore and listen for changes
+					subscriptions.append(subscription);
 					registrate_subscription(subscription);
 				}
 			}
@@ -124,11 +133,12 @@ namespace Podsblitz {
 		private Subscription get_subscription(Gtk.TreeIter iter) {
 
 			string title, description, url;
-			int pos;
+			int pos, id;
 			var subscription = new Subscription(); 
 
 			library.get(
 						iter,
+						ListStoreColumn.ID, out id,
 						ListStoreColumn.TITLE, out title,
 						ListStoreColumn.POSITION, out pos,
 						ListStoreColumn.DESCRIPTION, out description,
@@ -136,6 +146,7 @@ namespace Podsblitz {
 						-1
 					);
 
+			subscription.id = id;
 			subscription.title = title;
 			subscription.description = description;
 			subscription.url = url;
@@ -239,11 +250,22 @@ namespace Podsblitz {
 			print("Updating subsccriptions\n");
 
 			library.foreach((model, path, iter) => {
-				if (path.to_string() == "2") {
+				// if (path.to_string() == "2") {
 					var subscription = get_subscription(iter);
 					print("Updating subscription: %s %s (%s)\n", path.to_string(), subscription.title, subscription.url);
-					subscription.fetch();
-				}
+
+					library.set(iter, ListStoreColumn.TITLE, "Updating …", -1);
+
+					subscription.fetch_async.begin( (obj, res) => {
+						subscription.fetch_async.end(res);
+						library.set(iter, ListStoreColumn.TITLE, subscription.title);
+						subscription.save();
+					});
+					subscription.fetch_cover_async.begin((obj, res) => {
+						library.set(iter, ListStoreColumn.COVER, subscription.cover);
+						subscription.save();
+					});
+				// }
 				return false;
 			});
 

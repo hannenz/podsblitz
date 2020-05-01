@@ -59,6 +59,7 @@ namespace Podsblitz {
 		 * When loading from db we get a HashMap
 		 */
 		public Subscription.from_hash_map(Gee.HashMap<string, string> map) {
+
 			id = int.parse(map["id"]);
 			title = map["title"];
 			description = map["description"];
@@ -92,25 +93,18 @@ namespace Podsblitz {
 		 */
 		public bool subscribe(string url) {
 			this.url = url;
-			this.fetch();
-			this.save();
+			fetch_async.begin( (obj, res) => {
+				fetch_async.end(res);
+				save();
+			});
 			return true;
 		}
 
 
 
 		/**
-		 * Update a subscription from online
+		 * Load XML from URI and parse, async.
 		 */
-		public void fetch() {
-
-			print("Fetching subscription data from XML at %s\n", url);
-			read_xml();
-			fetch_cover();
-		}
-
-
-
 		public async void load_xml_async() {
 
 			if (xml_doc != null) {
@@ -135,55 +129,55 @@ namespace Podsblitz {
 
 
 
-		protected void read_xml() {
+		/**
+		 * Update a subscription from online, async.
+		 */
+		public async void fetch_async() {
 
-			load_xml_async.begin((obj, res) => {
-				load_xml_async.end(res);
+			yield load_xml_async(); //.begin((obj, res) => {
+				// load_xml_async.end(res);
 
-				title = get_xpath("/rss/channel/title");
-				description = get_xpath("/rss/channel/description");
-				dump();
+			title = get_xpath("/rss/channel/title");
+			description = get_xpath("/rss/channel/description");
 
-				// Fetch episodes
-				parse_node(xml_doc->get_root_element());
+			// Fetch episodes
+			parse_node(xml_doc->get_root_element());
 
-				changed();
-			});
+
+			// fetch_cover();
 		}
 
 
 
-		public void fetch_cover() {
+		public async void fetch_cover_async() {
 
-			load_xml_async.begin((obj, res) => {
-				load_xml_async.end(res);
+			yield load_xml_async(); // .begin((obj, res) => {
+				// load_xml_async.end(res);
 
-				var imageurl = get_xpath("/rss/channel/image/url");
-				if (imageurl == null) {
-					stderr.printf("No image url\n");
-					return;
-				}
+			var imageurl = get_xpath("/rss/channel/image/url");
+			if (imageurl == null) {
+				stderr.printf("No image url\n");
+				return;
+			}
 
-				print("Loading image from %s\n", imageurl);
+			print("Loading image from %s\n", imageurl);
 
-				File imagefile = File.new_for_uri(imageurl);
+			File imagefile = File.new_for_uri(imageurl);
 
-				imagefile.load_contents_async.begin(null, (obj, res) => {
-					try {
-						uint8[] contents;
-						string etag_out;
-						imagefile.load_contents_async.end(res, out contents, out etag_out);
-						InputStream istream= new MemoryInputStream.from_data(contents, GLib.free);
-						cover = new Gdk.Pixbuf.from_stream_at_scale(istream, CoverSize.LARGE, -1, true, null);
-						print("Loaded image successfully from %s\n", imageurl);
+			uint8[] contents;
+			string etag_out;
+			try {
+				yield imagefile.load_contents_async(null, out contents, out etag_out); //.begin(null, (obj, res) => {
+			// imagefile.load_contents_async.callback(res, out contents, out etag_out);
+				InputStream istream= new MemoryInputStream.from_data(contents, GLib.free);
+				cover = new Gdk.Pixbuf.from_stream_at_scale(istream, CoverSize.MEDIUM, -1, true, null);
+				print("Loaded image successfully from %s\n", imageurl);
 
-						changed();
-					}
-					catch (Error e) {
-						stderr.printf("Error loading image: %s\n", e.message);
-					}
-				});
-			});
+			}
+			catch (Error e) {
+				stderr.printf("Error loading image: %s\n", e.message);
+			}
+			// });
 		}
 
 
@@ -200,11 +194,11 @@ namespace Podsblitz {
 
 				if (iter->name == "item") {
 
-					// print("Found episode:\n");
+					print("Found episode:\n");
 
 					var episode = new Episode.from_xml_node(iter);
 					this.episodes.append(episode);
-					// episode.dump();
+					episode.dump();
 				}
 
 				parse_node(iter);
@@ -280,11 +274,12 @@ namespace Podsblitz {
 
 		public void dump() {
 
-			print("\n--- Subscription Dump ---\n");
+			print("\n");
+			print("--- Subscription Dump ---\n");
 			print("ID:          %u\n", id);
 			print("Title:       %s\n", title);
 			print("URL:         %s\n", url);
-			print("Description: %s\n\n", description);
+			// print("Description: %s\n\n", description);
 
 			foreach (var episode in episodes) {
 				episode.dump();
