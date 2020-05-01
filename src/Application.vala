@@ -1,6 +1,6 @@
 namespace Podsblitz {
 
-	enum ListStoreColumn {
+	enum SubscriptionColumn {
 		ID,
 		TITLE,
 		TITLE_SHORT,
@@ -10,6 +10,17 @@ namespace Podsblitz {
 		URL,
 		N_COLUMNS
 	}
+
+	enum EpisodeColumn {
+		COVER,
+		TITLE,
+		DESCRIPTION,
+		SUBSCRIPTION_TITLE,
+		PUBDATE,
+		DURATION,
+		N_COLUMNS
+	}
+
 
 	enum CoverSize {
 		SMALL = 90,
@@ -30,6 +41,7 @@ namespace Podsblitz {
 
 		protected List<Subscription> subscriptions;
 
+		public Gdk.Pixbuf noimage;
 
 
 		public static Application() {
@@ -50,10 +62,19 @@ namespace Podsblitz {
 				return;
 			}
 
+			noimage = null;
+			try {
+				// noimage = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/podsblitz/data/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM);
+				noimage = new Gdk.Pixbuf.from_resource_at_scale("/de/hannenz/podsblitz/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM, true);
+			}
+			catch (Error e) {
+				stderr.printf("%s\n", e.message);
+			}
+
 			// this.subscriptions = new List<Subscription>();
 
 			this.library = new Gtk.ListStore (
-				ListStoreColumn.N_COLUMNS,
+				SubscriptionColumn.N_COLUMNS,
 				typeof(int), 				// ID (database)
 				typeof(string),				// Title
 				typeof(string), 			// Title shortened
@@ -65,14 +86,21 @@ namespace Podsblitz {
 
 
 			this.latest = new Gtk.ListStore(
-				6,
+				EpisodeColumn.N_COLUMNS,
 				typeof(Gdk.Pixbuf), 			// Cover
 				typeof(string), 				// Episode title
 				typeof(string), 				// Episode description
 				typeof(string), 				// Podcast title
-				typeof(GLib.Date), 				// Publication  date
+				typeof(DateTime), 				// Publication  date
 				typeof(uint) 					// duration (seconds)
-				);
+			);
+
+			this.latest.set_default_sort_func((model, iter1, iter2) => {
+				DateTime date1, date2;
+				model.get(iter1, EpisodeColumn.PUBDATE, out date1, -1);
+				model.get(iter2, EpisodeColumn.PUBDATE, out date2, -1);
+				return date1.compare(date2);
+			});
 		}
 
 		protected override void startup() {
@@ -95,13 +123,7 @@ namespace Podsblitz {
 
 			load_subscriptions();
 
-			update_subscriptions();
-
-			// library.foreach( (model, path, iter) => {
-			// 	var subscription = get_subscription(iter);
-			// 	subscription.dump();
-			// 	return false;
-			// });
+			// update_subscriptions();
 
 		}
 
@@ -116,7 +138,6 @@ namespace Podsblitz {
 
 					var subscription = new Subscription.from_hash_map(result);
 					// subscription.fetch();
-					// subscription.dump();
 
 					// Add to ListStore and listen for changes
 					subscriptions.append(subscription);
@@ -138,11 +159,11 @@ namespace Podsblitz {
 
 			library.get(
 						iter,
-						ListStoreColumn.ID, out id,
-						ListStoreColumn.TITLE, out title,
-						ListStoreColumn.POSITION, out pos,
-						ListStoreColumn.DESCRIPTION, out description,
-						ListStoreColumn.URL, out url,
+						SubscriptionColumn.ID, out id,
+						SubscriptionColumn.TITLE, out title,
+						SubscriptionColumn.POSITION, out pos,
+						SubscriptionColumn.DESCRIPTION, out description,
+						SubscriptionColumn.URL, out url,
 						-1
 					);
 
@@ -169,13 +190,13 @@ namespace Podsblitz {
 			Gtk.TreeIter iter;
 			this.library.append(out iter);
 			this.library.set(iter,
-							 ListStoreColumn.ID, subscription.id,
-							 ListStoreColumn.TITLE, Markup.escape_text(subscription.title), 
-							 ListStoreColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
-							 ListStoreColumn.COVER, subscription.cover,
-							 ListStoreColumn.POSITION, subscription.pos,
-							 ListStoreColumn.DESCRIPTION, subscription.description,
-							 ListStoreColumn.URL, subscription.url,
+							 SubscriptionColumn.ID, subscription.id,
+							 SubscriptionColumn.TITLE, Markup.escape_text(subscription.title), 
+							 SubscriptionColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
+							 SubscriptionColumn.COVER, subscription.cover,
+							 SubscriptionColumn.POSITION, subscription.pos,
+							 SubscriptionColumn.DESCRIPTION, subscription.description,
+							 SubscriptionColumn.URL, subscription.url,
 							 -1);
 
 			subscription.iter = iter;
@@ -183,13 +204,13 @@ namespace Podsblitz {
 			subscription.changed.connect((subscription) => {
 				debug("Subscription has changed, updating TreeStore and saving it to db now\n");
 				this.library.set(subscription.iter,
-								 ListStoreColumn.ID, subscription.id,
-								 ListStoreColumn.TITLE, Markup.escape_text(subscription.title), 
-								 ListStoreColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
-								 ListStoreColumn.COVER, subscription.cover,
-								 ListStoreColumn.POSITION, subscription.pos,
-								 ListStoreColumn.DESCRIPTION, subscription.description,
-								 ListStoreColumn.URL, subscription.url,
+								 SubscriptionColumn.ID, subscription.id,
+								 SubscriptionColumn.TITLE, Markup.escape_text(subscription.title), 
+								 SubscriptionColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
+								 SubscriptionColumn.COVER, subscription.cover,
+								 SubscriptionColumn.POSITION, subscription.pos,
+								 SubscriptionColumn.DESCRIPTION, subscription.description,
+								 SubscriptionColumn.URL, subscription.url,
 								 -1
 						);
 				subscription.save();
@@ -221,7 +242,7 @@ namespace Podsblitz {
 			main_window.show_all();
 
 			// TODO: Store current selection in GSettings and read from there
-			main_window.stack.set_visible_child_name("library");
+			main_window.stack.set_visible_child_name("stream");
 		}
 
 
@@ -250,37 +271,37 @@ namespace Podsblitz {
 			debug("Updating subsccriptions\n");
 
 			library.foreach((model, path, iter) => {
-				// if (path.to_string() == "2") {
-					var subscription = get_subscription(iter);
-					debug("Updating subscription: %s %s (%s)\n", path.to_string(), subscription.title, subscription.url);
 
-					library.set(iter, ListStoreColumn.TITLE, "Updating …", -1);
+				var subscription = get_subscription(iter);
+				debug("Updating subscription: %s %s (%s)\n", path.to_string(), subscription.title, subscription.url);
 
-					subscription.fetch_async.begin( (obj, res) => {
-						subscription.fetch_async.end(res);
-						library.set(iter, ListStoreColumn.TITLE, subscription.title);
-						subscription.save();
+				library.set(iter, SubscriptionColumn.TITLE, "Updating …", -1);
 
-						foreach (var episode in subscription.episodes) {
-							var noimage = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/podsblitz/data/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM);
-							Gtk.TreeIter latest_iter;
-							latest.append(out latest_iter);
-							latest.set(latest_iter, 
-									   0, (subscription.cover != null) ? subscription.cover : noimage,
-									   1, episode.title,
-									   2, episode.description,
-									   3, subscription.title,
-									   4, episode.pubdate.format("%d.%m.%Y %H:%M"),
-									   5, episode.duration,
-									   -1
-								  );
-						}
-					});
-					subscription.fetch_cover_async.begin((obj, res) => {
-						library.set(iter, ListStoreColumn.COVER, subscription.cover);
-						subscription.save();
-					});
-				// }
+				subscription.fetch_async.begin( (obj, res) => {
+					subscription.fetch_async.end(res);
+					library.set(iter, SubscriptionColumn.TITLE, subscription.title + "(%u)".printf(subscription.episodes.length()));
+					subscription.save();
+
+					foreach (var episode in subscription.episodes) {
+
+						Gtk.TreeIter latest_iter;
+						latest.append(out latest_iter);
+						latest.set(latest_iter, 
+								   EpisodeColumn.COVER, (subscription.cover != null) ? subscription.cover : noimage,
+								   EpisodeColumn.TITLE, episode.title,
+								   EpisodeColumn.DESCRIPTION, episode.description,
+								   EpisodeColumn.SUBSCRIPTION_TITLE, subscription.title,
+								   EpisodeColumn.PUBDATE, episode.pubdate,
+								   EpisodeColumn.DURATION, episode.duration,
+								   -1
+							  );
+					}
+				});
+				subscription.fetch_cover_async.begin((obj, res) => {
+					subscription.fetch_cover_async.end(res);
+					library.set(iter, SubscriptionColumn.COVER, subscription.cover);
+					subscription.save();
+				});
 				return false;
 			});
 

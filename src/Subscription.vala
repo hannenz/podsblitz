@@ -68,15 +68,13 @@ namespace Podsblitz {
 
 			try {
 				if (map["cover"] == "") {
-					cover = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/podsblitz/data/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM);
+					cover = new Gdk.Pixbuf.from_resource_at_scale("/home/hannenz/podsblitz/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM, true);
 				}
 				else {
 					buffer = Base64.decode(map["cover"]);
 					var istream = new MemoryInputStream.from_data(buffer, GLib.free);
 					cover = new Gdk.Pixbuf.from_stream_at_scale(istream, CoverSize.MEDIUM, CoverSize.MEDIUM, true, null);
 				}
-
-
 			}
 			catch (Error e) {
 				stderr.printf("Error: %s\n", e.message);
@@ -194,11 +192,11 @@ namespace Podsblitz {
 
 				if (iter->name == "item") {
 
-					debug("Found episode:\n");
+					// debug("Found episode:\n");
 
 					var episode = new Episode.from_xml_node(iter);
 					this.episodes.append(episode);
-					episode.dump();
+					// episode.dump();
 				}
 
 				parse_node(iter);

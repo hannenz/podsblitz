@@ -33,6 +33,11 @@ namespace Podsblitz {
 						this.title = item_iter->get_content();
 						break;
 
+					case "description":
+						this.description = item_iter->get_content();
+						break;
+
+
 					case "link":
 						this.url = item_iter->get_content();
 						break;

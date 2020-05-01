@@ -3,4 +3,7 @@
 	<gresource prefix="/de/hannenz/podsblitz">
 		<file alias="styles/global.css">styles/global.css</file>
 	</gresource>
+	<gresource prefix="/de/hannenz/podsblitz">
+		<file alias="img/noimage.png">img/noimage.png</file>
+	</gresource>
 </gresources>

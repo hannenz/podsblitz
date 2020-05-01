@@ -7,5 +7,6 @@ sources = files(
 	'Episode.vala',
     'widgets/MainWindow.vala',
     'widgets/HeaderBar.vala',
-    'widgets/AddSubscriptionDialog.vala'
+    'widgets/AddSubscriptionDialog.vala',
+    'widgets/CellRendererDate.vala'
 )
