@@ -3,14 +3,14 @@ namespace Podsblitz {
 	public class MainWindow : Gtk.ApplicationWindow {
 
 
-		protected PodsblitzApplication app;
+		protected Application app;
 
 		protected uint configure_id;
 
 		public Gtk.Stack stack;
 
 
-		public MainWindow(PodsblitzApplication app) {
+		public MainWindow(Application app) {
 			Object (
 				application: app
 			);
@@ -60,7 +60,7 @@ namespace Podsblitz {
 			tvcol.pack_start(cell, false);
 			tvcol.set_attributes(cell, "pixbuf", 0);
 			tvcol.set_sizing(Gtk.TreeViewColumnSizing.FIXED);
-			tvcol.set_fixed_width(96);
+			tvcol.set_fixed_width(CoverSize.MEDIUM); // sohuld be SMALL later!!
 
 			tree_view.append_column(tvcol);
 			tree_view.insert_column_with_attributes(-1, "Description", new Gtk.CellRendererText(), "markup", 1);
@@ -82,13 +82,11 @@ namespace Podsblitz {
 			stack.add_titled(placeholder3, "playlist", _("Playlist"));
 
 
-
-
-			stack.set_visible_child_name(PodsblitzApplication.settings.get_string("stack-selected"));
+			stack.set_visible_child_name(Application.settings.get_string("stack-selected"));
 			stack.map.connect( (source) => {
 				var name = stack.get_visible_child_name();
 				print("Saving state: %s\n", name);
-				PodsblitzApplication.settings.set_string("stack-selected", name);
+				Application.settings.set_string("stack-selected", name);
 			});
 
 			paned.pack1(stack, true, false);
@@ -116,18 +114,18 @@ namespace Podsblitz {
 				configure_id = 0;
 
 				if (is_maximized) {
-					PodsblitzApplication.settings.set_boolean("window-maximized", true);
+					Application.settings.set_boolean("window-maximized", true);
 				}
 				else {
-					PodsblitzApplication.settings.set_boolean("window-maximized", false);
+					Application.settings.set_boolean("window-maximized", false);
 
 					Gdk.Rectangle rect;
 					get_allocation(out rect);
-					PodsblitzApplication.settings.set("window-size", "(ii)", rect.width, rect.height);
+					Application.settings.set("window-size", "(ii)", rect.width, rect.height);
 
 					int root_x, root_y;
 					get_position(out root_x, out root_y);
-					PodsblitzApplication.settings.set("window-position", "(ii)", root_x, root_y);
+					Application.settings.set("window-position", "(ii)", root_x, root_y);
 				}
 
 				return false;

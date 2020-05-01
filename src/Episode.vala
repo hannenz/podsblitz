@@ -15,6 +15,8 @@ namespace Podsblitz {
 
 		}
 
+
+
 		public Episode.from_xml_node(Xml.Node *node) {
 			for (Xml.Node *item_iter = node->children; item_iter != null; item_iter = item_iter->next) {
 

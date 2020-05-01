@@ -17,7 +17,7 @@ namespace Podsblitz {
 		LARGE = 300
 	}
 
-	public class PodsblitzApplication : Gtk.Application {
+	public class Application : Gtk.Application {
 
 
 		public static GLib.Settings settings;
@@ -32,7 +32,7 @@ namespace Podsblitz {
 
 
 
-		public static PodsblitzApplication() {
+		public static Application() {
 			Object(
 				application_id: "de.hannenz.podsblitz",
 				flags: ApplicationFlags.FLAGS_NONE
@@ -181,7 +181,7 @@ namespace Podsblitz {
 			subscription.iter = iter;
 
 			subscription.changed.connect((subscription) => {
-				print("Subscription has changed, updating TreeStore and saving it to db now\n");
+				debug("Subscription has changed, updating TreeStore and saving it to db now\n");
 				this.library.set(subscription.iter,
 								 ListStoreColumn.ID, subscription.id,
 								 ListStoreColumn.TITLE, Markup.escape_text(subscription.title), 
@@ -226,7 +226,7 @@ namespace Podsblitz {
 
 
 		public void add_subscription() {
-			print("Activating 'Add Podcast' action\n");
+			debug("Activating 'Add Podcast' action\n");
 			var dlg = new AddSubscriptionDialog();
 			var ret = dlg.run();
 			dlg.close();
@@ -247,12 +247,12 @@ namespace Podsblitz {
 		 * Update all subscriptions
 		 */
 		public void update_subscriptions() {
-			print("Updating subsccriptions\n");
+			debug("Updating subsccriptions\n");
 
 			library.foreach((model, path, iter) => {
 				// if (path.to_string() == "2") {
 					var subscription = get_subscription(iter);
-					print("Updating subscription: %s %s (%s)\n", path.to_string(), subscription.title, subscription.url);
+					debug("Updating subscription: %s %s (%s)\n", path.to_string(), subscription.title, subscription.url);
 
 					library.set(iter, ListStoreColumn.TITLE, "Updating …", -1);
 
@@ -260,6 +260,21 @@ namespace Podsblitz {
 						subscription.fetch_async.end(res);
 						library.set(iter, ListStoreColumn.TITLE, subscription.title);
 						subscription.save();
+
+						foreach (var episode in subscription.episodes) {
+							var noimage = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/podsblitz/data/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM);
+							Gtk.TreeIter latest_iter;
+							latest.append(out latest_iter);
+							latest.set(latest_iter, 
+									   0, (subscription.cover != null) ? subscription.cover : noimage,
+									   1, episode.title,
+									   2, episode.description,
+									   3, subscription.title,
+									   4, episode.pubdate.format("%d.%m.%Y %H:%M"),
+									   5, episode.duration,
+									   -1
+								  );
+						}
 					});
 					subscription.fetch_cover_async.begin((obj, res) => {
 						library.set(iter, ListStoreColumn.COVER, subscription.cover);

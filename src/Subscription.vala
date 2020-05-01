@@ -12,7 +12,7 @@ namespace Podsblitz {
 		protected uint8[] xml;
 		protected Xml.Doc *xml_doc { get; set; default = null; }
 
-		protected List<Episode> episodes;
+		public List<Episode> episodes;
 
 		public Gdk.Pixbuf cover; 				// Original size
 		public Gdk.Pixbuf cover_large; 			// 300px
@@ -43,7 +43,7 @@ namespace Podsblitz {
 
 			// When cover changes, automatically update / create diff. sizes
 			this.notify["cover"].connect( (source, property) => {
-				print("Updating cover size\n");
+				debug("Updating cover size\n");
 				cover_large = cover.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
 				cover_medium = cover.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
 				cover_small = cover.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
@@ -160,7 +160,7 @@ namespace Podsblitz {
 				return;
 			}
 
-			print("Loading image from %s\n", imageurl);
+			debug("Loading image from %s\n", imageurl);
 
 			File imagefile = File.new_for_uri(imageurl);
 
@@ -171,7 +171,7 @@ namespace Podsblitz {
 			// imagefile.load_contents_async.callback(res, out contents, out etag_out);
 				InputStream istream= new MemoryInputStream.from_data(contents, GLib.free);
 				cover = new Gdk.Pixbuf.from_stream_at_scale(istream, CoverSize.MEDIUM, -1, true, null);
-				print("Loaded image successfully from %s\n", imageurl);
+				debug("Loaded image successfully from %s\n", imageurl);
 
 			}
 			catch (Error e) {
@@ -194,7 +194,7 @@ namespace Podsblitz {
 
 				if (iter->name == "item") {
 
-					print("Found episode:\n");
+					debug("Found episode:\n");
 
 					var episode = new Episode.from_xml_node(iter);
 					this.episodes.append(episode);

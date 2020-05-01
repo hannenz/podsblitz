@@ -14,6 +14,8 @@
  */
 public static int main(string[] args) {
 
-	var app = new Podsblitz.PodsblitzApplication();
+	debug("Podsblitz! We are running!");
+
+	var app = new Podsblitz.Application();
 	return app.run(args);
 }

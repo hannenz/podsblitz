@@ -1,6 +1,6 @@
 sources = files(
     'main.vala',
-	'PodsblitzApplication.vala',
+	'Application.vala',
 	'Database.vala',
 	'Utility.vala',
 	'Subscription.vala',
