@@ -7,4 +7,4 @@ export G_MESSAGES_DEBUG=all
 export GSETTINGS_SCHEMA_DIR=./data/
 
 # run the executable
-./build/de.hannenz.podsblitz
+./build/de.hannenz.podsblitz $@

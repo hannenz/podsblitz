@@ -69,9 +69,11 @@ namespace Podsblitz {
 		 * @return Podsblitz.Episode
 		 */ 
 		public Episode.by_guid(string guid) {
+
 			debug("check");
 
 			try {
+				this.db = new Database();
 				Sqlite.Statement stmt;
 
 				const string query = "SELECT * FROM episodes WHERE guid=$guid";
@@ -80,9 +82,11 @@ namespace Podsblitz {
 
 				if (stmt.step() != Sqlite.ROW) {
 					stderr.printf("Error: %s\n", this.db.db.errmsg());
+					return;
 				}
 
 				var cols = stmt.column_count();
+				debug("%u\n", cols);
 
 				for (int i = 0; i < cols; i++) {
 

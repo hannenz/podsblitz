@@ -16,28 +16,9 @@ public static int main(string[] args) {
 
 	debug("Podsblitz! We are running!");
 
-	print("%s\n", args[1]);
 	var episode = new Podsblitz.Episode.by_guid(args[1]);
 	episode.dump();
 	return 0;
-
-
-	// var episode = new Podsblitz.Episode();
-	// episode.guid = "HANS.FRANZ";
-	// episode.title = "Lorem ipsum";
-	// episode.description = "Cupidatat ex Ut in occaecat cillum id Lorem Duis occaecat nulla anim consequat irure non eiusmod laborum Lorem in occaecat Excepteur, qui minim ullamco aute cillum non dolor incididunt incididunt.";
-	// episode.link = "http://www.example.com";
-	// episode.pubdate = new DateTime.now_local();
-	// episode.duration = 1234;
-	// episode.subscription_id = 3;
-	// episode.progress = 0;
-	// episode.completed = false;
-	// episode.downloaded = false;
-	// episode.file = null;
-	// // episode.dump();
-	// episode.save();
-	// return 0;
-
 
 	var app = new Podsblitz.Application();
 	return app.run(args);
