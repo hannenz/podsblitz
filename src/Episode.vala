@@ -2,6 +2,7 @@ namespace Podsblitz {
 
 	public class Episode {
 
+		public int id { get; set; }
 		public string guid { get; set; }
 		public string title { get; set; }
 		public string description { get; set; }
@@ -15,10 +16,10 @@ namespace Podsblitz {
 		public File file { get; set; }
 		protected Database db;
 
+
 		public Episode() {
 
 		}
-
 
 
 		public Episode.from_xml_node(Xml.Node *node) {
@@ -29,6 +30,7 @@ namespace Podsblitz {
 				}
 
 				switch (item_iter->name) {
+
 					case "guid":
 						guid = item_iter->get_content();
 						break;
@@ -60,32 +62,84 @@ namespace Podsblitz {
 			}
 		}
 
-		/*
-		public void findByGuid(string guid) {
+
+
+		/**
+		 * @param string guid
+		 * @return Podsblitz.Episode
+		 */ 
+		public Episode.by_guid(string guid) {
+			debug("check");
 
 			try {
 				Sqlite.Statement stmt;
+
 				const string query = "SELECT * FROM episodes WHERE guid=$guid";
 				this.db.db.prepare_v2(query, query.length, out stmt, null);
 				stmt.bind_text(stmt.bind_parameter_index("$guid"), guid);
-				var cols = stmt.column_count();
+
 				if (stmt.step() != Sqlite.ROW) {
-					stderr.printf("Error: %s\n", e.message);
+					stderr.printf("Error: %s\n", this.db.db.errmsg());
 				}
-				for (var i = 0; i < cols; i++) {
+
+				var cols = stmt.column_count();
+
+				for (int i = 0; i < cols; i++) {
+
 					var column_name = stmt.column_name(i);
+					debug(column_name);
 					switch (column_name) {
-						case "guid"
+
+						case "guid":
+							guid = stmt.column_text(i);
+							break;
+
+						case "title":
+							title = stmt.column_text(i);
+							break;
+
+						case "description":
+							description = stmt.column_text(i);
+							break;
+
+						case "link":
+							link = stmt.column_text(i);
+							break;
+
+						case "pubdate":
+							pubdate = new DateTime.from_iso8601(stmt.column_text(i), new TimeZone.local());
+							break;
+
+						case "duration":
+							duration = stmt.column_int(i);
+							break;
+
+						case "subscription_id":
+							subscription_id = stmt.column_int(i);
+							break;
+
+						case "progress":
+							progress = stmt.column_int(i);
+							break;
+
+						case "completed":
+							completed = (bool)stmt.column_int(i);
+							break;
+
+						case "downloaded":
+							downloaded = (bool)stmt.column_int(i);
+							break;
+
+						case "file":
+							file = File.new_for_uri(stmt.column_text(i));
+							break;
+					}
 				}
-
-
-
 			}
 			catch (DatabaseError e) {
 				stderr.printf("Database error: %s\n", e.message);
 			}
 		}
-*/
 
 
 		public void save() {
