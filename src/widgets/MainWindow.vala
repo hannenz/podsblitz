@@ -70,7 +70,7 @@ namespace Podsblitz {
 			tvcol.pack_start(cell, false);
 			tvcol.set_attributes(cell, "pixbuf", EpisodeColumn.COVER);
 			tvcol.set_sizing(Gtk.TreeViewColumnSizing.FIXED);
-			tvcol.set_fixed_width(CoverSize.MEDIUM); // sohuld be SMALL later!!
+			tvcol.set_fixed_width(CoverSize.SMALL); // sohuld be SMALL later!!
 			tree_view.append_column(tvcol);
 
 			var body_cell = new Gtk.CellRendererText();

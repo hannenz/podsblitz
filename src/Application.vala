@@ -42,6 +42,9 @@ namespace Podsblitz {
 		protected List<Subscription> subscriptions;
 
 		public Gdk.Pixbuf noimage;
+		public Gdk.Pixbuf noimage_large;
+		public Gdk.Pixbuf noimage_medium;
+		public Gdk.Pixbuf noimage_small;
 
 
 		public static Application() {
@@ -66,6 +69,9 @@ namespace Podsblitz {
 			try {
 				// noimage = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/podsblitz/data/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM);
 				noimage = new Gdk.Pixbuf.from_resource_at_scale("/de/hannenz/podsblitz/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM, true);
+				noimage_large = noimage.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
+				noimage_medium = noimage.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
+				noimage_small = noimage.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
 			}
 			catch (Error e) {
 				stderr.printf("%s\n", e.message);
@@ -191,11 +197,11 @@ namespace Podsblitz {
 			this.library.append(out iter);
 			this.library.set(iter,
 							 SubscriptionColumn.ID, subscription.id,
+							 SubscriptionColumn.COVER, subscription.cover,
 							 SubscriptionColumn.TITLE, Markup.escape_text(subscription.title), 
 							 SubscriptionColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
-							 SubscriptionColumn.COVER, subscription.cover,
+							 SubscriptionColumn.DESCRIPTION, Markup.escape_text(subscription.description),
 							 SubscriptionColumn.POSITION, subscription.pos,
-							 SubscriptionColumn.DESCRIPTION, subscription.description,
 							 SubscriptionColumn.URL, subscription.url,
 							 -1);
 
@@ -205,11 +211,11 @@ namespace Podsblitz {
 				debug("Subscription has changed, updating TreeStore and saving it to db now\n");
 				this.library.set(subscription.iter,
 								 SubscriptionColumn.ID, subscription.id,
+								 SubscriptionColumn.COVER, subscription.cover,
 								 SubscriptionColumn.TITLE, Markup.escape_text(subscription.title), 
 								 SubscriptionColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
-								 SubscriptionColumn.COVER, subscription.cover,
+								 SubscriptionColumn.DESCRIPTION, Markup.escape_text(subscription.description),
 								 SubscriptionColumn.POSITION, subscription.pos,
-								 SubscriptionColumn.DESCRIPTION, subscription.description,
 								 SubscriptionColumn.URL, subscription.url,
 								 -1
 						);
@@ -287,19 +293,21 @@ namespace Podsblitz {
 						Gtk.TreeIter latest_iter;
 						latest.append(out latest_iter);
 						latest.set(latest_iter, 
-								   EpisodeColumn.COVER, (subscription.cover != null) ? subscription.cover : noimage,
-								   EpisodeColumn.TITLE, episode.title,
-								   EpisodeColumn.DESCRIPTION, episode.description,
-								   EpisodeColumn.SUBSCRIPTION_TITLE, subscription.title,
+								   EpisodeColumn.COVER, (subscription.cover_small != null) ? subscription.cover_small : noimage_small,
+								   EpisodeColumn.TITLE, Markup.escape_text(episode.title),
+								   EpisodeColumn.DESCRIPTION, Markup.escape_text(episode.description),
+								   EpisodeColumn.SUBSCRIPTION_TITLE, Markup.escape_text(subscription.title),
 								   EpisodeColumn.PUBDATE, episode.pubdate,
 								   EpisodeColumn.DURATION, episode.duration,
 								   -1
 							  );
+
+						episode.save();
 					}
 				});
 				subscription.fetch_cover_async.begin((obj, res) => {
 					subscription.fetch_cover_async.end(res);
-					library.set(iter, SubscriptionColumn.COVER, subscription.cover);
+					library.set(iter, SubscriptionColumn.COVER, subscription.cover_small);
 					subscription.save();
 				});
 				return false;

@@ -73,7 +73,11 @@ namespace Podsblitz {
 				else {
 					buffer = Base64.decode(map["cover"]);
 					var istream = new MemoryInputStream.from_data(buffer, GLib.free);
-					cover = new Gdk.Pixbuf.from_stream_at_scale(istream, CoverSize.MEDIUM, CoverSize.MEDIUM, true, null);
+
+					cover = new Gdk.Pixbuf.from_stream(istream, null);
+					cover_large = cover.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
+					cover_medium = cover.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
+					cover_small = cover.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
 				}
 			}
 			catch (Error e) {
@@ -141,8 +145,6 @@ namespace Podsblitz {
 			// Fetch episodes
 			parse_node(xml_doc->get_root_element());
 
-
-			// fetch_cover();
 		}
 
 
@@ -168,7 +170,12 @@ namespace Podsblitz {
 				yield imagefile.load_contents_async(null, out contents, out etag_out); //.begin(null, (obj, res) => {
 			// imagefile.load_contents_async.callback(res, out contents, out etag_out);
 				InputStream istream= new MemoryInputStream.from_data(contents, GLib.free);
-				cover = new Gdk.Pixbuf.from_stream_at_scale(istream, CoverSize.MEDIUM, -1, true, null);
+
+				cover = new Gdk.Pixbuf.from_stream(istream, null);
+				cover_large = cover.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
+				cover_medium = cover.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
+				cover_small = cover.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
+
 				debug("Loaded image successfully from %s\n", imageurl);
 
 			}

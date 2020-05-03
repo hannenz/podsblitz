@@ -5,11 +5,15 @@ namespace Podsblitz {
 		public string guid { get; set; }
 		public string title { get; set; }
 		public string description { get; set; }
-		public string url { get; set; }
+		public string link { get; set; }
 		public int duration { get; set; }
 		public int progress { get;  set; }
 		public bool completed { get; set; }
 		public DateTime pubdate { get; set; }
+		public int subscription_id { get; set; }
+		public bool downloaded { get; set; }
+		public File file { get; set; }
+		protected Database db;
 
 		public Episode() {
 
@@ -26,20 +30,19 @@ namespace Podsblitz {
 
 				switch (item_iter->name) {
 					case "guid":
-						this.guid = item_iter->get_content();
+						guid = item_iter->get_content();
 						break;
 
 					case "title":
-						this.title = item_iter->get_content();
+						title = item_iter->get_content();
 						break;
 
 					case "description":
-						this.description = item_iter->get_content();
+						description = item_iter->get_content();
 						break;
 
-
 					case "link":
-						this.url = item_iter->get_content();
+						link = item_iter->get_content();
 						break;
 
 					case "pubDate":
@@ -57,17 +60,98 @@ namespace Podsblitz {
 			}
 		}
 
+		/*
+		public void findByGuid(string guid) {
+
+			try {
+				Sqlite.Statement stmt;
+				const string query = "SELECT * FROM episodes WHERE guid=$guid";
+				this.db.db.prepare_v2(query, query.length, out stmt, null);
+				stmt.bind_text(stmt.bind_parameter_index("$guid"), guid);
+				var cols = stmt.column_count();
+				if (stmt.step() != Sqlite.ROW) {
+					stderr.printf("Error: %s\n", e.message);
+				}
+				for (var i = 0; i < cols; i++) {
+					var column_name = stmt.column_name(i);
+					switch (column_name) {
+						case "guid"
+				}
+
+
+
+			}
+			catch (DatabaseError e) {
+				stderr.printf("Database error: %s\n", e.message);
+			}
+		}
+*/
+
+
+		public void save() {
+
+			try {
+				this.db = new Database();
+
+				Sqlite.Statement stmt;
+
+				// UPSERT: https://stackoverflow.com/a/38463024
+
+				const string query1 = "UPDATE episodes SET guid=$guid, title=$title, description=$description, link=$link, pubdate=$pubdate, duration=$duration, subscription_id=$subscription_id, progress=$progress, completed=$completed, downloaded=$downloaded, file=$file WHERE guid=$guid";
+				this.db.db.prepare_v2(query1, query1.length, out stmt, null);
+				stmt.bind_text(stmt.bind_parameter_index("$guid"), guid);
+				stmt.bind_text(stmt.bind_parameter_index("$title"), title);
+				stmt.bind_text(stmt.bind_parameter_index("$description"), description);
+				stmt.bind_text(stmt.bind_parameter_index("$link"), link);
+				stmt.bind_text(stmt.bind_parameter_index("$pubdate"), pubdate != null ? pubdate.format("%Y-%m-%d %H:%M:%S") : "");
+				stmt.bind_int(stmt.bind_parameter_index("$duration"), duration);
+				stmt.bind_int(stmt.bind_parameter_index("$subscription_id"), subscription_id);
+				stmt.bind_int(stmt.bind_parameter_index("$progress"), progress);
+				stmt.bind_int(stmt.bind_parameter_index("$completed"), (int)completed);
+				stmt.bind_int(stmt.bind_parameter_index("$downloaded"), (int)downloaded);
+				stmt.bind_text(stmt.bind_parameter_index("$file"), file != null ? file.get_uri() : "");
+				if (stmt.step() != Sqlite.DONE) {
+					stderr.printf("Error: %s\n", this.db.db.errmsg());
+				}
+				const string query2 = "INSERT INTO episodes (guid, title, description, link, pubdate, duration, subscription_id, progress, completed, downloaded, file) SELECT $guid, $title, $description, $link, $pubdate, $duration, $subscription_id, $progress, $completed, $downloaded, $file WHERE (Select Changes() = 0)";
+
+				this.db.db.prepare_v2(query2, query2.length, out stmt, null);
+				stmt.bind_text(stmt.bind_parameter_index("$guid"), guid);
+				stmt.bind_text(stmt.bind_parameter_index("$title"), title);
+				stmt.bind_text(stmt.bind_parameter_index("$description"), description);
+				stmt.bind_text(stmt.bind_parameter_index("$link"), link);
+				stmt.bind_text(stmt.bind_parameter_index("$pubdate"), pubdate != null ? pubdate.format("%Y-%m-%d %H:%M:%S") : "");
+				stmt.bind_int(stmt.bind_parameter_index("$duration"), duration);
+				stmt.bind_int(stmt.bind_parameter_index("$subscription_id"), subscription_id);
+				stmt.bind_int(stmt.bind_parameter_index("$progress"), progress);
+				stmt.bind_int(stmt.bind_parameter_index("$completed"), (int)completed);
+				stmt.bind_int(stmt.bind_parameter_index("$downloaded"), (int)downloaded);
+				stmt.bind_text(stmt.bind_parameter_index("$file"), file != null ? file.get_uri() : "");
+				if (stmt.step() != Sqlite.DONE) {
+					stderr.printf("Error: %s\n", this.db.db.errmsg());
+				}
+
+				stmt.reset();
+			}
+			catch (DatabaseError e) {
+				stderr.printf("Database error: %s\n", e.message);
+			}
+			catch (Error e) {
+				stderr.printf("%s\n", e.message);
+			}
+		}
+
 			
 
 		public void dump() {
-			print("Episode GUID: %s\n", this.guid);
-			print("Title: %s\n", this.title);
-			print("URL: %s\n", this.url);
-			print("Description: %s\n", this.description);
-			print("Duration: %u\n", this.duration);
-			print("Progress: %u\n", this.progress);
-			print("Completed: %s\n", this.completed ? "yes" : "no");
-			print("Date: %s\n", this.pubdate.format("%d.%m.%Y %H:%M"));
+			print("Episode GUID: %s\n", guid);
+			print("Title: %s\n", title);
+			print("Link: %s\n", link);
+			print("Description: %s\n", description);
+			print("Duration: %u\n", duration);
+			print("Progress: %u\n", progress);
+			print("Completed: %s\n", completed ? "yes" : "no");
+			print("Date: %s\n", pubdate.format("%d.%m.%Y %H:%M"));
 		}
 	}
 }

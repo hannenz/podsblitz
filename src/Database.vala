@@ -10,7 +10,7 @@ namespace Podsblitz {
 
 	public class Database : Object {
 
-		protected Sqlite.Database db;
+		public Sqlite.Database db;
 
 		protected Sqlite.Statement statement;
 
