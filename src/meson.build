@@ -8,5 +8,7 @@ sources = files(
     'widgets/MainWindow.vala',
     'widgets/HeaderBar.vala',
     'widgets/AddSubscriptionDialog.vala',
-    'widgets/CellRendererDate.vala'
+    'widgets/CellRendererDate.vala',
+	'widgets/CoverView.vala',
+	'widgets/ListView.vala'
 )

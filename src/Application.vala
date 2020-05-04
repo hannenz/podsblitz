@@ -33,9 +33,11 @@ namespace Podsblitz {
 
 		public static GLib.Settings settings;
 
-		protected Gtk.ListStore library;
+		// protected Gtk.ListStore library;
 
 		protected Gtk.ListStore latest;
+
+		public MainWindow main_window;
 
 		protected Database db;
 
@@ -68,7 +70,7 @@ namespace Podsblitz {
 			noimage = null;
 			try {
 				// noimage = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/podsblitz/data/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM);
-				noimage = new Gdk.Pixbuf.from_resource_at_scale("/de/hannenz/podsblitz/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM, true);
+				noimage = new Gdk.Pixbuf.from_resource("/de/hannenz/podsblitz/img/noimage.png");
 				noimage_large = noimage.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
 				noimage_medium = noimage.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
 				noimage_small = noimage.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
@@ -77,18 +79,19 @@ namespace Podsblitz {
 				stderr.printf("%s\n", e.message);
 			}
 
+
 			// this.subscriptions = new List<Subscription>();
 
-			this.library = new Gtk.ListStore (
-				SubscriptionColumn.N_COLUMNS,
-				typeof(int), 				// ID (database)
-				typeof(string),				// Title
-				typeof(string), 			// Title shortened
-				typeof(Gdk.Pixbuf),			// Cover
-				typeof(int), 				// Position (Order)
-				typeof(string),				// Description
-				typeof(string) 				// URL
-			);
+			// this.library = new Gtk.ListStore (
+			// 	SubscriptionColumn.N_COLUMNS,
+			// 	typeof(int), 				// ID (database)
+			// 	typeof(string),				// Title
+			// 	typeof(string), 			// Title shortened
+			// 	typeof(Gdk.Pixbuf),			// Cover
+			// 	typeof(int), 				// Position (Order)
+			// 	typeof(string),				// Description
+			// 	typeof(string) 				// URL
+			// );
 
 
 			this.latest = new Gtk.ListStore(
@@ -127,7 +130,6 @@ namespace Podsblitz {
 			app_menu.append("Update all", "app.update-subscriptions");
 			set_app_menu(app_menu);
 
-			load_subscriptions();
 
 			// update_subscriptions();
 
@@ -158,27 +160,27 @@ namespace Podsblitz {
 
 
 		private Subscription get_subscription(Gtk.TreeIter iter) {
-
-			string title, description, url;
-			int pos, id;
+        //
+		// 	string title, description, url;
+		// 	int pos, id;
 			var subscription = new Subscription(); 
-
-			library.get(
-						iter,
-						SubscriptionColumn.ID, out id,
-						SubscriptionColumn.TITLE, out title,
-						SubscriptionColumn.POSITION, out pos,
-						SubscriptionColumn.DESCRIPTION, out description,
-						SubscriptionColumn.URL, out url,
-						-1
-					);
-
-			subscription.id = id;
-			subscription.title = title;
-			subscription.description = description;
-			subscription.url = url;
-			subscription.pos = pos;
-
+        //
+		// 	library.get(
+		// 				iter,
+		// 				SubscriptionColumn.ID, out id,
+		// 				SubscriptionColumn.TITLE, out title,
+		// 				SubscriptionColumn.POSITION, out pos,
+		// 				SubscriptionColumn.DESCRIPTION, out description,
+		// 				SubscriptionColumn.URL, out url,
+		// 				-1
+		// 			);
+        //
+		// 	subscription.id = id;
+		// 	subscription.title = title;
+		// 	subscription.description = description;
+		// 	subscription.url = url;
+		// 	subscription.pos = pos;
+        //
 			return subscription;
 		}
 
@@ -193,34 +195,34 @@ namespace Podsblitz {
 		 */
 		private void registrate_subscription(Subscription subscription) {
 
-			Gtk.TreeIter iter;
-			this.library.append(out iter);
-			this.library.set(iter,
-							 SubscriptionColumn.ID, subscription.id,
-							 SubscriptionColumn.COVER, subscription.cover,
-							 SubscriptionColumn.TITLE, Markup.escape_text(subscription.title), 
-							 SubscriptionColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
-							 SubscriptionColumn.DESCRIPTION, Markup.escape_text(subscription.description),
-							 SubscriptionColumn.POSITION, subscription.pos,
-							 SubscriptionColumn.URL, subscription.url,
-							 -1);
-
-			subscription.iter = iter;
-
-			subscription.changed.connect((subscription) => {
-				debug("Subscription has changed, updating TreeStore and saving it to db now\n");
-				this.library.set(subscription.iter,
-								 SubscriptionColumn.ID, subscription.id,
-								 SubscriptionColumn.COVER, subscription.cover,
-								 SubscriptionColumn.TITLE, Markup.escape_text(subscription.title), 
-								 SubscriptionColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
-								 SubscriptionColumn.DESCRIPTION, Markup.escape_text(subscription.description),
-								 SubscriptionColumn.POSITION, subscription.pos,
-								 SubscriptionColumn.URL, subscription.url,
-								 -1
-						);
-				subscription.save();
-			});
+			// Gtk.TreeIter iter;
+			// this.library.append(out iter);
+			// this.library.set(iter,
+			// 				 SubscriptionColumn.ID, subscription.id,
+			// 				 SubscriptionColumn.COVER, subscription.cover,
+			// 				 SubscriptionColumn.TITLE, Markup.escape_text(subscription.title), 
+			// 				 SubscriptionColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
+			// 				 SubscriptionColumn.DESCRIPTION, Markup.escape_text(subscription.description),
+			// 				 SubscriptionColumn.POSITION, subscription.pos,
+			// 				 SubscriptionColumn.URL, subscription.url,
+			// 				 -1);
+            //
+			// subscription.iter = iter;
+            //
+			// subscription.changed.connect((subscription) => {
+			// 	debug("Subscription has changed, updating TreeStore and saving it to db now\n");
+			// 	this.library.set(subscription.iter,
+			// 					 SubscriptionColumn.ID, subscription.id,
+			// 					 SubscriptionColumn.COVER, subscription.cover,
+			// 					 SubscriptionColumn.TITLE, Markup.escape_text(subscription.title), 
+			// 					 SubscriptionColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
+			// 					 SubscriptionColumn.DESCRIPTION, Markup.escape_text(subscription.description),
+			// 					 SubscriptionColumn.POSITION, subscription.pos,
+			// 					 SubscriptionColumn.URL, subscription.url,
+			// 					 -1
+			// 			);
+			// 	subscription.save();
+			// });
 		}
 
 
@@ -232,7 +234,7 @@ namespace Podsblitz {
 			settings.get("window-position", "(ii)", out window_x, out window_y);
 			settings.get("window-size", "(ii)", out rect.width, out rect.height);
 
-			var main_window = new MainWindow(this);
+			main_window = new MainWindow(this);
 
 
 			if (window_x != -1 || window_y != -1) {
@@ -249,6 +251,10 @@ namespace Podsblitz {
 
 			// TODO: Store current selection in GSettings and read from there
 			main_window.stack.set_visible_child_name("stream");
+
+
+			load_subscriptions();
+			main_window.cover_view.set_subscriptions(subscriptions);
 		}
 
 
@@ -276,42 +282,42 @@ namespace Podsblitz {
 		public void update_subscriptions() {
 			debug("Updating subsccriptions\n");
 
-			library.foreach((model, path, iter) => {
-
-				var subscription = get_subscription(iter);
-				debug("Updating subscription: %s %s (%s)\n", path.to_string(), subscription.title, subscription.url);
-
-				library.set(iter, SubscriptionColumn.TITLE, "Updating …", -1);
-
-				subscription.fetch_async.begin( (obj, res) => {
-					subscription.fetch_async.end(res);
-					library.set(iter, SubscriptionColumn.TITLE, subscription.title + "(%u)".printf(subscription.episodes.length()));
-					subscription.save();
-
-					foreach (var episode in subscription.episodes) {
-
-						Gtk.TreeIter latest_iter;
-						latest.append(out latest_iter);
-						latest.set(latest_iter, 
-								   EpisodeColumn.COVER, (subscription.cover_small != null) ? subscription.cover_small : noimage_small,
-								   EpisodeColumn.TITLE, Markup.escape_text(episode.title),
-								   EpisodeColumn.DESCRIPTION, Markup.escape_text(episode.description),
-								   EpisodeColumn.SUBSCRIPTION_TITLE, Markup.escape_text(subscription.title),
-								   EpisodeColumn.PUBDATE, episode.pubdate,
-								   EpisodeColumn.DURATION, episode.duration,
-								   -1
-							  );
-
-						episode.save();
-					}
-				});
-				subscription.fetch_cover_async.begin((obj, res) => {
-					subscription.fetch_cover_async.end(res);
-					library.set(iter, SubscriptionColumn.COVER, subscription.cover_small);
-					subscription.save();
-				});
-				return false;
-			});
+			// library.foreach((model, path, iter) => {
+            //
+			// 	var subscription = get_subscription(iter);
+			// 	debug("Updating subscription: %s %s (%s)\n", path.to_string(), subscription.title, subscription.url);
+            //
+			// 	library.set(iter, SubscriptionColumn.TITLE, "Updating …", -1);
+            //
+			// 	subscription.fetch_async.begin( (obj, res) => {
+			// 		subscription.fetch_async.end(res);
+			// 		library.set(iter, SubscriptionColumn.TITLE, subscription.title + "(%u)".printf(subscription.episodes.length()));
+			// 		subscription.save();
+            //
+			// 		foreach (var episode in subscription.episodes) {
+            //
+			// 			Gtk.TreeIter latest_iter;
+			// 			latest.append(out latest_iter);
+			// 			latest.set(latest_iter, 
+			// 					   EpisodeColumn.COVER, (subscription.cover_small != null) ? subscription.cover_small : noimage_small,
+			// 					   EpisodeColumn.TITLE, Markup.escape_text(episode.title),
+			// 					   EpisodeColumn.DESCRIPTION, Markup.escape_text(episode.description),
+			// 					   EpisodeColumn.SUBSCRIPTION_TITLE, Markup.escape_text(subscription.title),
+			// 					   EpisodeColumn.PUBDATE, episode.pubdate,
+			// 					   EpisodeColumn.DURATION, episode.duration,
+			// 					   -1
+			// 				  );
+            //
+			// 			episode.save();
+			// 		}
+			// 	});
+			// 	subscription.fetch_cover_async.begin((obj, res) => {
+			// 		subscription.fetch_cover_async.end(res);
+			// 		library.set(iter, SubscriptionColumn.COVER, subscription.cover_small);
+			// 		subscription.save();
+			// 	});
+			// 	return false;
+			// });
 
 		}
 
@@ -319,9 +325,9 @@ namespace Podsblitz {
 		}
 
 
-		public Gtk.ListStore get_library() {
-			return this.library;
-		}
+		// public Gtk.ListStore get_library() {
+			// return this.library;
+		// }
 
 
 		public Gtk.ListStore get_latest() {

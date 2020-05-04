@@ -9,6 +9,8 @@ namespace Podsblitz {
 
 		public Gtk.Stack stack;
 
+		public CoverView cover_view;
+
 
 		public MainWindow(Application app) {
 			Object (
@@ -27,33 +29,10 @@ namespace Podsblitz {
 			stack = new Gtk.Stack();
 			stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT);
 
-			var icon_view = new Gtk.IconView.with_model(this.app.get_library());
-			icon_view.set_markup_column(SubscriptionColumn.TITLE);
-			icon_view.set_pixbuf_column(SubscriptionColumn.COVER);
-			icon_view.set_tooltip_column(Podsblitz.SubscriptionColumn.DESCRIPTION);
-			icon_view.set_item_width(64);
-			icon_view.set_item_padding(0);
-			icon_view.reorderable = true;
-			icon_view.item_activated.connect( (path) => {
 
-				string title;
-				int id;
-				Gtk.TreeIter iter;
-
-				var model = icon_view.get_model();
-				model.get_iter(out iter, path);
-				model.get(iter, 
-						  SubscriptionColumn.ID, out id,
-						  SubscriptionColumn.TITLE, out title,
-						  -1
-						 );
-				print("Clicked on an icon view item: %u: %s\n", id, title);
-
-				// subscription.fetch_cover_async.begin( (obj, res) => {
-				// 	subscription.fetch_cover_async.end();
-				// 	subscription.save();
-				// });
-
+			cover_view = new CoverView();
+			cover_view.select.connect( (id) => {
+				print("Clicked on an icon view item: %u\n", id);
 			});
 
 
@@ -130,13 +109,10 @@ namespace Podsblitz {
 			sw.add(tree_view);
 			stack.add_titled(sw, "stream", _("Stream"));
 
-			sw = new Gtk.ScrolledWindow(null, null);
-			sw.add(icon_view);
 
-			stack.add_titled(sw, "library", _("Library"));
+			stack.add_titled(cover_view, "library", _("Library"));
 			stack.add_titled(placeholder2, "offline", _("Offline"));
 			stack.add_titled(placeholder3, "playlist", _("Playlist"));
-
 
 			stack.set_visible_child_name(Application.settings.get_string("stack-selected"));
 			stack.map.connect( (source) => {
