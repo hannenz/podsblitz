@@ -13,13 +13,6 @@
  * along with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 public static int main(string[] args) {
-
-	debug("Podsblitz! We are running!");
-
-	var episode = new Podsblitz.Episode.by_guid(args[1]);
-	episode.dump();
-	return 0;
-
 	var app = new Podsblitz.Application();
 	return app.run(args);
 }

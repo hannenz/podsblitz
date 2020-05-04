@@ -22,6 +22,11 @@ namespace Podsblitz {
 		}
 
 
+		public Episode.from_sql_row(Sqlite.Statement stmt) {
+			read_sql_row(stmt);
+		}
+
+
 		public Episode.from_xml_node(Xml.Node *node) {
 			for (Xml.Node *item_iter = node->children; item_iter != null; item_iter = item_iter->next) {
 
@@ -63,14 +68,72 @@ namespace Podsblitz {
 		}
 
 
+		/**
+		 * Read properties from a Sqlite query result row
+		 *
+		 * @param Sqlite.Statement stmt
+		 * @return void
+		 */
+		protected void read_sql_row(Sqlite.Statement stmt) {
+			var cols = stmt.column_count();
+
+			for (int i = 0; i < cols; i++) {
+
+				var column_name = stmt.column_name(i);
+				switch (column_name) {
+
+					case "guid":
+						guid = stmt.column_text(i);
+						break;
+
+					case "title":
+						title = stmt.column_text(i);
+						break;
+
+					case "description":
+						description = stmt.column_text(i);
+						break;
+
+					case "link":
+						link = stmt.column_text(i);
+						break;
+
+					case "pubdate":
+						pubdate = new DateTime.from_iso8601(stmt.column_text(i), new TimeZone.local());
+						break;
+
+					case "duration":
+						duration = stmt.column_int(i);
+						break;
+
+					case "subscription_id":
+						subscription_id = stmt.column_int(i);
+						break;
+
+					case "progress":
+						progress = stmt.column_int(i);
+						break;
+
+					case "completed":
+						completed = (bool)stmt.column_int(i);
+						break;
+
+					case "downloaded":
+						downloaded = (bool)stmt.column_int(i);
+						break;
+
+					case "file":
+						file = File.new_for_uri(stmt.column_text(i));
+						break;
+				}
+			}
+		}
 
 		/**
 		 * @param string guid
 		 * @return Podsblitz.Episode
 		 */ 
 		public Episode.by_guid(string guid) {
-
-			debug("check");
 
 			try {
 				this.db = new Database();
@@ -85,60 +148,7 @@ namespace Podsblitz {
 					return;
 				}
 
-				var cols = stmt.column_count();
-				debug("%u\n", cols);
-
-				for (int i = 0; i < cols; i++) {
-
-					var column_name = stmt.column_name(i);
-					debug(column_name);
-					switch (column_name) {
-
-						case "guid":
-							guid = stmt.column_text(i);
-							break;
-
-						case "title":
-							title = stmt.column_text(i);
-							break;
-
-						case "description":
-							description = stmt.column_text(i);
-							break;
-
-						case "link":
-							link = stmt.column_text(i);
-							break;
-
-						case "pubdate":
-							pubdate = new DateTime.from_iso8601(stmt.column_text(i), new TimeZone.local());
-							break;
-
-						case "duration":
-							duration = stmt.column_int(i);
-							break;
-
-						case "subscription_id":
-							subscription_id = stmt.column_int(i);
-							break;
-
-						case "progress":
-							progress = stmt.column_int(i);
-							break;
-
-						case "completed":
-							completed = (bool)stmt.column_int(i);
-							break;
-
-						case "downloaded":
-							downloaded = (bool)stmt.column_int(i);
-							break;
-
-						case "file":
-							file = File.new_for_uri(stmt.column_text(i));
-							break;
-					}
-				}
+				read_sql_row(stmt);
 			}
 			catch (DatabaseError e) {
 				stderr.printf("Database error: %s\n", e.message);

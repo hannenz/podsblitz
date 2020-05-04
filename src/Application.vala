@@ -41,7 +41,7 @@ namespace Podsblitz {
 
 		protected Database db;
 
-		protected List<Subscription> subscriptions;
+		public List<Subscription> subscriptions;
 
 		public Gdk.Pixbuf noimage;
 		public Gdk.Pixbuf noimage_large;
@@ -62,7 +62,7 @@ namespace Podsblitz {
 			try {
 				this.db = new Database();
 			}
-			catch (DatabaseError.OPEN_FAILED e) {
+			catch (DatabaseError e) {
 				stderr.printf("%s\n", e.message);
 				return;
 			}
@@ -147,6 +147,7 @@ namespace Podsblitz {
 					var subscription = new Subscription.from_hash_map(result);
 					// subscription.fetch();
 
+
 					// Add to ListStore and listen for changes
 					subscriptions.append(subscription);
 					registrate_subscription(subscription);
@@ -159,29 +160,25 @@ namespace Podsblitz {
 		}
 
 
-		private Subscription get_subscription(Gtk.TreeIter iter) {
-        //
-		// 	string title, description, url;
-		// 	int pos, id;
-			var subscription = new Subscription(); 
-        //
-		// 	library.get(
-		// 				iter,
-		// 				SubscriptionColumn.ID, out id,
-		// 				SubscriptionColumn.TITLE, out title,
-		// 				SubscriptionColumn.POSITION, out pos,
-		// 				SubscriptionColumn.DESCRIPTION, out description,
-		// 				SubscriptionColumn.URL, out url,
-		// 				-1
-		// 			);
-        //
-		// 	subscription.id = id;
-		// 	subscription.title = title;
-		// 	subscription.description = description;
-		// 	subscription.url = url;
-		// 	subscription.pos = pos;
-        //
-			return subscription;
+		public Subscription? get_subscription(int id) {
+
+
+			foreach (var subscription in subscriptions) {
+				if (subscription.id == id) {
+					return subscription;
+				}
+			}
+			return null;
+			
+			// CompareFunc<int> intcmp = (a, b) => {
+			// 	return (int) (a > b) - (int) (a < b);
+			// };	
+            //
+			// List<Subscription>? el = subscriptions.find_custom(subscription, intcmp);
+			// if (el != null) {
+			// 	return el.data as Subscription;
+			// }
+			// return null;
 		}
 
 
@@ -250,7 +247,7 @@ namespace Podsblitz {
 			main_window.show_all();
 
 			// TODO: Store current selection in GSettings and read from there
-			main_window.stack.set_visible_child_name("stream");
+			main_window.stack.set_visible_child_name("library");
 
 
 			load_subscriptions();

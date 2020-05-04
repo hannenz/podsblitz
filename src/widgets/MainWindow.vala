@@ -8,6 +8,7 @@ namespace Podsblitz {
 		protected uint configure_id;
 
 		public Gtk.Stack stack;
+		public Gtk.Stack stack2;
 
 		public CoverView cover_view;
 
@@ -29,11 +30,11 @@ namespace Podsblitz {
 			stack = new Gtk.Stack();
 			stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT);
 
+			stack2 = new Gtk.Stack();
+			stack2.set_transition_type(Gtk.StackTransitionType.SLIDE_UP_DOWN);
+
 
 			cover_view = new CoverView();
-			cover_view.select.connect( (id) => {
-				print("Clicked on an icon view item: %u\n", id);
-			});
 
 
 			//////////////////////////////////////////////
@@ -110,7 +111,34 @@ namespace Podsblitz {
 			stack.add_titled(sw, "stream", _("Stream"));
 
 
-			stack.add_titled(cover_view, "library", _("Library"));
+
+			var vbox = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
+			var back_btn = new Gtk.Button.with_label("zurück");
+			back_btn.clicked.connect( () => {
+				stack2.set_visible_child_name("library-overview");
+			});
+			vbox.pack_start(back_btn, false, true, 0);
+			var detail_header = new SubscriptionDetailHeader();
+			vbox.pack_start(detail_header, true, true, 0);
+
+			stack2.add_named(cover_view, "library-overview");
+			stack2.add_named(vbox, "library-detail");
+
+			cover_view.select.connect( (id) => {
+				print("Clicked on an icon view item: %u\n", id);
+
+				var subscription = app.get_subscription(id);
+				subscription.dump();
+
+				detail_header.set_image(subscription.cover_large);
+				detail_header.set_title(subscription.title);
+				detail_header.set_description(subscription.description);
+
+
+				stack2.set_visible_child_name("library-detail");
+			});
+
+			stack.add_titled(stack2, "library", _("Library"));
 			stack.add_titled(placeholder2, "offline", _("Offline"));
 			stack.add_titled(placeholder3, "playlist", _("Playlist"));
 

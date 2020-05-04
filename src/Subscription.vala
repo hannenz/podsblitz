@@ -36,7 +36,7 @@ namespace Podsblitz {
 			try {
 				this.db = new Database();
 			}
-			catch (DatabaseError.OPEN_FAILED e) {
+			catch (DatabaseError e) {
 				stderr.printf("%s\n", e.message);
 				return;
 			}
@@ -60,6 +60,8 @@ namespace Podsblitz {
 		 */
 		public Subscription.from_hash_map(Gee.HashMap<string, string> map) {
 
+			this();
+
 			id = int.parse(map["id"]);
 			title = map["title"];
 			description = map["description"];
@@ -82,6 +84,20 @@ namespace Podsblitz {
 			}
 			catch (Error e) {
 				stderr.printf("Error: %s\n", e.message);
+			}
+
+			// Load episodes
+			Sqlite.Statement stmt;
+
+			const string query = "SELECT * FROM episodes WHERE subscription_id=$subscription_id";
+			int ec = this.db.db.prepare_v2(query, query.length, out stmt);
+			if (ec == Sqlite.OK) {
+				stmt.bind_int(stmt.bind_parameter_index("$subscription_id"), id);
+
+				while (stmt.step() == Sqlite.ROW) {
+					var episode = new Episode.from_sql_row(stmt);
+					episodes.append(episode);
+				}
 			}
 		}
 
@@ -284,7 +300,7 @@ namespace Podsblitz {
 			print("ID:          %u\n", id);
 			print("Title:       %s\n", title);
 			print("URL:         %s\n", url);
-			// print("Description: %s\n\n", description);
+			print("Description: %s\n\n", description);
 
 			foreach (var episode in episodes) {
 				episode.dump();

@@ -10,5 +10,6 @@ sources = files(
     'widgets/AddSubscriptionDialog.vala',
     'widgets/CellRendererDate.vala',
 	'widgets/CoverView.vala',
-	'widgets/ListView.vala'
+	'widgets/ListView.vala',
+	'widgets/SubscriptionDetailHeader.vala'
 )
