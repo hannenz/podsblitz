@@ -18,6 +18,7 @@ namespace Podsblitz {
 		public Gdk.Pixbuf cover_large; 			// 300px
 		public Gdk.Pixbuf cover_medium; 		// 150px
 		public Gdk.Pixbuf cover_small; 			// 90px
+		private Gdk.Pixbuf noimage;
 
 		public Gtk.TreeIter iter; 				// Iter referencing this subscription inside the Model (IconView)
 
@@ -31,6 +32,7 @@ namespace Podsblitz {
 
 		public Subscription() {
 
+			noimage = new Gdk.Pixbuf.from_resource("/de/hannenz/podsblitz/img/noimage.png");
 			this.episodes = new List<Episode>();
 
 			try {
@@ -68,23 +70,23 @@ namespace Podsblitz {
 			url = map["url"];
 			uint8[] buffer;
 
-			try {
-				if (map["cover"] == "") {
-					cover = new Gdk.Pixbuf.from_resource_at_scale("/home/hannenz/podsblitz/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM, true);
-				}
-				else {
-					buffer = Base64.decode(map["cover"]);
-					var istream = new MemoryInputStream.from_data(buffer, GLib.free);
+			// debug("[%s]".printf(map["cover"].substring(0, 100)));
 
-					cover = new Gdk.Pixbuf.from_stream(istream, null);
-					cover_large = cover.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
-					cover_medium = cover.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
-					cover_small = cover.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
-				}
+			
+			cover = noimage;
+
+			try {
+				buffer = Base64.decode(map["cover"]);
+				var istream = new MemoryInputStream.from_data(buffer, GLib.free);
+				cover = new Gdk.Pixbuf.from_stream(istream, null);
 			}
 			catch (Error e) {
-				stderr.printf("Error: %s\n", e.message);
+				stderr.printf("Failed to create pixbuf for cover: %s\n", e.message);
 			}
+
+			cover_large = cover.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
+			cover_medium = cover.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
+			cover_small = cover.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
 
 			// Load episodes
 			Sqlite.Statement stmt;

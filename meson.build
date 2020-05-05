@@ -19,13 +19,11 @@ asresources = gnome.compile_resources(
 
 dependencies = [
     dependency('gtk+-3.0'),
-    # dependency('granite'),
-	# dependency('libgda-5.0'),
-	# dependency('libxml-2.0')
 	dependency('sqlite3'),
 	dependency('libxml-2.0'),
 	dependency('gee-0.8'),
-	dependency('libsoup-2.4')
+	dependency('libsoup-2.4'),
+	meson.get_compiler('vala').find_library('posix')
 ]
 
 executable(

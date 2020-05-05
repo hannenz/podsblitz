@@ -201,9 +201,6 @@ namespace Podsblitz {
 
 				stmt.reset();
 			}
-			catch (DatabaseError e) {
-				stderr.printf("Database error: %s\n", e.message);
-			}
 			catch (Error e) {
 				stderr.printf("%s\n", e.message);
 			}

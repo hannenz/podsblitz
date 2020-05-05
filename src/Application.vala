@@ -69,29 +69,14 @@ namespace Podsblitz {
 
 			noimage = null;
 			try {
-				// noimage = new Gdk.Pixbuf.from_file_at_size("/home/hannenz/podsblitz/data/img/noimage.png", CoverSize.MEDIUM, CoverSize.MEDIUM);
 				noimage = new Gdk.Pixbuf.from_resource("/de/hannenz/podsblitz/img/noimage.png");
 				noimage_large = noimage.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
 				noimage_medium = noimage.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
 				noimage_small = noimage.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
 			}
 			catch (Error e) {
-				stderr.printf("%s\n", e.message);
+				stderr.printf("Error while loading noimage.png: %s\n", e.message);
 			}
-
-
-			// this.subscriptions = new List<Subscription>();
-
-			// this.library = new Gtk.ListStore (
-			// 	SubscriptionColumn.N_COLUMNS,
-			// 	typeof(int), 				// ID (database)
-			// 	typeof(string),				// Title
-			// 	typeof(string), 			// Title shortened
-			// 	typeof(Gdk.Pixbuf),			// Cover
-			// 	typeof(int), 				// Position (Order)
-			// 	typeof(string),				// Description
-			// 	typeof(string) 				// URL
-			// );
 
 
 			this.latest = new Gtk.ListStore(
@@ -130,10 +115,47 @@ namespace Podsblitz {
 			app_menu.append("Update all", "app.update-subscriptions");
 			set_app_menu(app_menu);
 
-
 			// update_subscriptions();
-
 		}
+
+
+		protected override void activate() {
+			int window_x, window_y;
+			var rect = Gtk.Allocation();
+
+			settings.get("window-position", "(ii)", out window_x, out window_y);
+			settings.get("window-size", "(ii)", out rect.width, out rect.height);
+
+			main_window = new MainWindow(this);
+
+			if (window_x != -1 || window_y != -1) {
+				main_window.move(window_x, window_y);
+			}
+
+			main_window.set_allocation(rect);
+
+			if (settings.get_boolean("window-maximized")) {
+				main_window.maximize();
+			}
+
+			main_window.show_all();
+
+
+			var provider = new Gtk.CssProvider();
+			provider.load_from_resource("/de/hannenz/podsblitz/styles/global.css");
+			Gtk.StyleContext.add_provider_for_screen(
+				Gdk.Screen.get_default(),
+				provider,
+				Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+			);
+
+			load_subscriptions();
+			main_window.cover_view.set_subscriptions(subscriptions);
+
+			// TODO: Store current selection in GSettings and read from there
+			main_window.stack.set_visible_child_name("library");
+		}
+
 
 
 		// Load subscriptions from database
@@ -162,23 +184,12 @@ namespace Podsblitz {
 
 		public Subscription? get_subscription(int id) {
 
-
 			foreach (var subscription in subscriptions) {
 				if (subscription.id == id) {
 					return subscription;
 				}
 			}
 			return null;
-			
-			// CompareFunc<int> intcmp = (a, b) => {
-			// 	return (int) (a > b) - (int) (a < b);
-			// };	
-            //
-			// List<Subscription>? el = subscriptions.find_custom(subscription, intcmp);
-			// if (el != null) {
-			// 	return el.data as Subscription;
-			// }
-			// return null;
 		}
 
 
@@ -223,40 +234,9 @@ namespace Podsblitz {
 		}
 
 
-		protected override void activate() {
-			int window_x, window_y;
-			var rect = Gtk.Allocation();
-
-
-			settings.get("window-position", "(ii)", out window_x, out window_y);
-			settings.get("window-size", "(ii)", out rect.width, out rect.height);
-
-			main_window = new MainWindow(this);
-
-
-			if (window_x != -1 || window_y != -1) {
-				main_window.move(window_x, window_y);
-			}
-
-			main_window.set_allocation(rect);
-
-			if (settings.get_boolean("window-maximized")) {
-				main_window.maximize();
-			}
-
-			main_window.show_all();
-
-			// TODO: Store current selection in GSettings and read from there
-			main_window.stack.set_visible_child_name("library");
-
-
-			load_subscriptions();
-			main_window.cover_view.set_subscriptions(subscriptions);
-		}
 
 
 		public void add_subscription() {
-			debug("Activating 'Add Podcast' action\n");
 			var dlg = new AddSubscriptionDialog();
 			var ret = dlg.run();
 			dlg.close();
@@ -317,15 +297,6 @@ namespace Podsblitz {
 			// });
 
 		}
-
-		public void update_stream() {
-		}
-
-
-		// public Gtk.ListStore get_library() {
-			// return this.library;
-		// }
-
 
 		public Gtk.ListStore get_latest() {
 			return this.latest;

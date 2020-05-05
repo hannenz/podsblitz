@@ -131,8 +131,9 @@ namespace Podsblitz {
 				subscription.dump();
 
 				detail_header.set_image(subscription.cover_large);
-				detail_header.set_title(subscription.title);
-				detail_header.set_description(subscription.description);
+				// detail_header.set_title(subscription.title);
+				// detail_header.set_description(subscription.description);
+				detail_header.set_text(subscription.title, subscription.description);
 
 
 				stack2.set_visible_child_name("library-detail");
