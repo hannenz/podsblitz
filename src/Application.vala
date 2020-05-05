@@ -12,6 +12,8 @@ namespace Podsblitz {
 	}
 
 	enum EpisodeColumn {
+		ID,
+		GUID,
 		COVER,
 		TITLE,
 		DESCRIPTION,
@@ -35,18 +37,11 @@ namespace Podsblitz {
 
 		// protected Gtk.ListStore library;
 
-		protected Gtk.ListStore latest;
-
 		public MainWindow main_window;
 
 		protected Database db;
 
 		public List<Subscription> subscriptions;
-
-		public Gdk.Pixbuf noimage;
-		public Gdk.Pixbuf noimage_large;
-		public Gdk.Pixbuf noimage_medium;
-		public Gdk.Pixbuf noimage_small;
 
 
 		public static Application() {
@@ -66,35 +61,6 @@ namespace Podsblitz {
 				stderr.printf("%s\n", e.message);
 				return;
 			}
-
-			noimage = null;
-			try {
-				noimage = new Gdk.Pixbuf.from_resource("/de/hannenz/podsblitz/img/noimage.png");
-				noimage_large = noimage.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
-				noimage_medium = noimage.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
-				noimage_small = noimage.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
-			}
-			catch (Error e) {
-				stderr.printf("Error while loading noimage.png: %s\n", e.message);
-			}
-
-
-			this.latest = new Gtk.ListStore(
-				EpisodeColumn.N_COLUMNS,
-				typeof(Gdk.Pixbuf), 			// Cover
-				typeof(string), 				// Episode title
-				typeof(string), 				// Episode description
-				typeof(string), 				// Podcast title
-				typeof(DateTime), 				// Publication  date
-				typeof(uint) 					// duration (seconds)
-			);
-
-			this.latest.set_default_sort_func((model, iter1, iter2) => {
-				DateTime date1, date2;
-				model.get(iter1, EpisodeColumn.PUBDATE, out date1, -1);
-				model.get(iter2, EpisodeColumn.PUBDATE, out date2, -1);
-				return date1.compare(date2);
-			});
 		}
 
 		protected override void startup() {
@@ -162,23 +128,16 @@ namespace Podsblitz {
 		protected void load_subscriptions() {
 
 			try {
-				this.db.query("SELECT * FROM subscriptions");
+				this.db.query("SELECT * FROM subscriptions LIMIT 6");
 				var results = this.db.getAll();
 				foreach (Gee.HashMap<string,string> result in results) {
-
 					var subscription = new Subscription.from_hash_map(result);
-					// subscription.fetch();
-
-
-					// Add to ListStore and listen for changes
 					subscriptions.append(subscription);
-					registrate_subscription(subscription);
 				}
 			}
 			catch (DatabaseError e) {
 				stderr.printf("Database error: %s\n", e.message);
 			}
-
 		}
 
 
@@ -259,48 +218,27 @@ namespace Podsblitz {
 		public void update_subscriptions() {
 			debug("Updating subsccriptions\n");
 
-			// library.foreach((model, path, iter) => {
-            //
-			// 	var subscription = get_subscription(iter);
-			// 	debug("Updating subscription: %s %s (%s)\n", path.to_string(), subscription.title, subscription.url);
-            //
-			// 	library.set(iter, SubscriptionColumn.TITLE, "Updating …", -1);
-            //
-			// 	subscription.fetch_async.begin( (obj, res) => {
-			// 		subscription.fetch_async.end(res);
-			// 		library.set(iter, SubscriptionColumn.TITLE, subscription.title + "(%u)".printf(subscription.episodes.length()));
-			// 		subscription.save();
-            //
-			// 		foreach (var episode in subscription.episodes) {
-            //
-			// 			Gtk.TreeIter latest_iter;
-			// 			latest.append(out latest_iter);
-			// 			latest.set(latest_iter, 
-			// 					   EpisodeColumn.COVER, (subscription.cover_small != null) ? subscription.cover_small : noimage_small,
-			// 					   EpisodeColumn.TITLE, Markup.escape_text(episode.title),
-			// 					   EpisodeColumn.DESCRIPTION, Markup.escape_text(episode.description),
-			// 					   EpisodeColumn.SUBSCRIPTION_TITLE, Markup.escape_text(subscription.title),
-			// 					   EpisodeColumn.PUBDATE, episode.pubdate,
-			// 					   EpisodeColumn.DURATION, episode.duration,
-			// 					   -1
-			// 				  );
-            //
-			// 			episode.save();
-			// 		}
-			// 	});
-			// 	subscription.fetch_cover_async.begin((obj, res) => {
-			// 		subscription.fetch_cover_async.end(res);
-			// 		library.set(iter, SubscriptionColumn.COVER, subscription.cover_small);
-			// 		subscription.save();
-			// 	});
-			// 	return false;
-			// });
+			foreach (var subscription in subscriptions) {
+				debug("Updating subscription: %s (%s)\n", subscription.title, subscription.url);
+
+				// library.set(iter, SubscriptionColumn.TITLE, "Updating …", -1);
+
+				subscription.fetch_async.begin( (obj, res) => {
+					subscription.fetch_async.end(res);
+					// library.set(iter, SubscriptionColumn.TITLE, subscription.title + "(%u)".printf(subscription.episodes.length()));
+					subscription.save();
+
+					main_window.latest_episodes_view.set_episodes(subscription.episodes);
+
+				});
+
+				subscription.fetch_cover_async.begin((obj, res) => {
+					subscription.fetch_cover_async.end(res);
+					// library.set(iter, SubscriptionColumn.COVER, subscription.cover_small);
+					subscription.save();
+				});
+			}
 
 		}
-
-		public Gtk.ListStore get_latest() {
-			return this.latest;
-		}
-
 	}
 }

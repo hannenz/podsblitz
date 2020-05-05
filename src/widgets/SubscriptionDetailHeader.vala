@@ -24,8 +24,11 @@ public class Podsblitz.SubscriptionDetailHeader : Grid {
 		text_view.set_cursor_visible(false);
 		text_view.set_editable(false);
 
-		attach(image, 0, 0, 4, 1);
-		attach(text_view, 4, 0, 8, 1);
+		var swin = new ScrolledWindow(null, null);
+		swin.add(text_view);
+
+		attach(image, 0, 0, 1, 1);
+		attach(swin, 1, 0, 3, 1);
 
 		show_all();
 	}

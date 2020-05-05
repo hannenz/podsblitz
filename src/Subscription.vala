@@ -32,13 +32,13 @@ namespace Podsblitz {
 
 		public Subscription() {
 
-			noimage = new Gdk.Pixbuf.from_resource("/de/hannenz/podsblitz/img/noimage.png");
 			this.episodes = new List<Episode>();
 
 			try {
 				this.db = new Database();
+				noimage = new Gdk.Pixbuf.from_resource("/de/hannenz/podsblitz/img/noimage.png");
 			}
-			catch (DatabaseError e) {
+			catch (Error e) {
 				stderr.printf("%s\n", e.message);
 				return;
 			}
@@ -104,6 +104,69 @@ namespace Podsblitz {
 		}
 
 
+		public Subscription.by_id(int id) {
+			try {
+				Sqlite.Statement stmt;
+
+				const string query = "SELECT * FROM subscriptions WHERE id=$id";
+				this.db.db.prepare_v2(query, query.length, out stmt, null);
+				stmt.bind_int(stmt.bind_parameter_index("$id"), id);
+
+				if (stmt.step() != Sqlite.ROW) {
+					stderr.printf("Error: %s\n", this.db.db.errmsg());
+					return;
+				}
+
+				read_sql_row(stmt);
+			}
+			catch (DatabaseError e) {
+				stderr.printf("Database error: %s\n", e.message);
+			}
+		}
+
+
+
+		/**
+		 * Read properties from a Sqlite query result row
+		 *
+		 * @param Sqlite.Statement stmt
+		 * @return void
+		 */
+		protected void read_sql_row(Sqlite.Statement stmt) {
+			var cols = stmt.column_count();
+
+			for (int i = 0; i < cols; i++) {
+
+				var column_name = stmt.column_name(i);
+				switch (column_name) {
+
+					case "id":
+						id = stmt.column_int(i);
+						break;
+
+					case "title":
+						title = stmt.column_text(i);
+						break;
+
+					case "description":
+						description = stmt.column_text(i);
+						break;
+
+					case "url":
+						url = stmt.column_text(i);
+						break;
+
+					case "cover":
+						break;
+
+					case "pos":
+						pos = stmt.column_int(i);
+						break;
+				}
+			}
+		}
+
+
 
 		/**
 		 * Subscribe to a new podcast
@@ -162,7 +225,6 @@ namespace Podsblitz {
 
 			// Fetch episodes
 			parse_node(xml_doc->get_root_element());
-
 		}
 
 
@@ -216,12 +278,9 @@ namespace Podsblitz {
 				}
 
 				if (iter->name == "item") {
-
-					// debug("Found episode:\n");
-
 					var episode = new Episode.from_xml_node(iter);
+					episode.subscription_id = this.id;
 					this.episodes.append(episode);
-					// episode.dump();
 				}
 
 				parse_node(iter);
@@ -254,39 +313,47 @@ namespace Podsblitz {
 
 		public void save() {
 
-			string query;
 			uint8[] buffer = { 0 };
+			Sqlite.Statement stmt;
 
 			try {
+				debug("Saving subscription: %s, cover: %s", title, cover != null ? "not null" : "null");
 
 				if (this.cover != null) {
 					this.cover.save_to_buffer(out buffer, "png");
 				}
 
 				// UPSERT: https://stackoverflow.com/a/38463024
-				query = "UPDATE subscriptions  SET title='%s', description='%s', url='%s', pos=%u, cover='%s' WHERE url='%s'".printf(
-					this.title,
-					this.description,
-					this.url,
-					this.pos,
-					Base64.encode(buffer),
-					this.url
-					);
+				const string query1 = "UPDATE subscriptions  SET title=$title, description=$description, url=$url, pos=$pos, cover=$cover WHERE id=$id";
+				this.db.db.prepare_v2(query1, query1.length, out stmt, null);
+				stmt.bind_text(stmt.bind_parameter_index("$title"), title);
+				stmt.bind_text(stmt.bind_parameter_index("$description"), description);
+				stmt.bind_text(stmt.bind_parameter_index("$url"), url);
+				stmt.bind_int(stmt.bind_parameter_index("$pos"), pos);
+				stmt.bind_text(stmt.bind_parameter_index("$cover"), Base64.encode(buffer));
+				stmt.bind_int(stmt.bind_parameter_index("$id"), id);
 
-				this.db.query(query);
+				if (stmt.step() != Sqlite.DONE) {
+					stderr.printf("Error: %s\n", this.db.db.errmsg());
+				}
 
-				query = "INSERT INTO subscriptions (title, description, url, pos, cover) SELECT '%s', '%s', '%s', %u, '%s' WHERE (Select Changes() = 0)".printf(
-					this.title,
-					this.description,
-					this.url,
-					this.pos,
-					Base64.encode(buffer)
-					);
+				const string query2 = "INSERT INTO subscriptions (title, description, url, pos, cover) SELECT $title, $descrition, $url, $pos, $cover WHERE (Select Changes() = 0)";
+				this.db.db.prepare_v2(query2, query2.length, out stmt, null);
+				stmt.bind_text(stmt.bind_parameter_index("$title"), title);
+				stmt.bind_text(stmt.bind_parameter_index("$description"), description);
+				stmt.bind_text(stmt.bind_parameter_index("$url"), url);
+				stmt.bind_int(stmt.bind_parameter_index("$pos"), pos);
+				stmt.bind_text(stmt.bind_parameter_index("$cover"), Base64.encode(buffer));
 
-				this.db.query(query);
-			}
-			catch (DatabaseError.QUERY_FAILED e) {
-				print("Database Error: %s\n", e.message);
+				if (stmt.step() != Sqlite.DONE) {
+					stderr.printf("Error: %s\n", this.db.db.errmsg());
+				}
+
+				stmt.reset();
+
+				foreach (var episode in episodes) {
+					episode.save();
+				}
 			}
 			catch (Error e) {
 				print("Error: %s\n", e.message);

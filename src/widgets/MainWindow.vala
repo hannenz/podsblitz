@@ -11,6 +11,7 @@ namespace Podsblitz {
 		public Gtk.Stack stack2;
 
 		public CoverView cover_view;
+		public ListView latest_episodes_view;
 
 
 		public MainWindow(Application app) {
@@ -21,18 +22,11 @@ namespace Podsblitz {
 
 			var paned = new Gtk.Paned(Gtk.Orientation.HORIZONTAL);
 
-			// default_height = 600;
-			// default_width = 600;
-
-			// var vbox = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
-			// vbox.margin = 4;
-
 			stack = new Gtk.Stack();
 			stack.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT);
 
 			stack2 = new Gtk.Stack();
 			stack2.set_transition_type(Gtk.StackTransitionType.SLIDE_UP_DOWN);
-
 
 			cover_view = new CoverView();
 
@@ -41,73 +35,13 @@ namespace Podsblitz {
 			//  Setup TreeView (Stream, "Latest" view)  //
 			//////////////////////////////////////////////
 
-			var tree_view = new Gtk.TreeView();
-			tree_view.set_model(this.app.get_latest());
-
-			var cell = new Gtk.CellRendererPixbuf();
-			var tvcol = new Gtk.TreeViewColumn();
-			tvcol.set_title("Cover");
-			tvcol.pack_start(cell, false);
-			tvcol.set_attributes(cell, "pixbuf", EpisodeColumn.COVER);
-			tvcol.set_sizing(Gtk.TreeViewColumnSizing.FIXED);
-			tvcol.set_fixed_width(CoverSize.SMALL); // sohuld be SMALL later!!
-			tree_view.append_column(tvcol);
-
-			var body_cell = new Gtk.CellRendererText();
-			body_cell.set("wrap-mode", Pango.WrapMode.WORD_CHAR);
-			body_cell.set("wrap-width", 400);
-			body_cell.set("yalign", 0);
-			tvcol = new Gtk.TreeViewColumn();
-			tvcol.set_title("Description");
-			tvcol.pack_start(body_cell, false);
-			tvcol.set_cell_data_func(body_cell, (cl, cell, model, iter) => {
-				Gtk.CellRendererText crt = (Gtk.CellRendererText)cell;
-
-				string title, description, subscription_title;
-				model.get(iter, EpisodeColumn.TITLE, out title, EpisodeColumn.DESCRIPTION, out description, EpisodeColumn.SUBSCRIPTION_TITLE, out subscription_title, -1);
-				crt.markup = "<b><big>%s</big></b>\n<b>%s</b>\n%s".printf(title, subscription_title, truncate(description, 100));
-			});
-			tree_view.append_column(tvcol);
-
-			var date_cell = new Gtk.CellRendererText();
-			date_cell.set("yalign", 0);
-			tvcol = new Gtk.TreeViewColumn();
-			tvcol.set_title("Date");
-			tvcol.pack_start(date_cell, false);
-			tvcol.set_cell_data_func(date_cell, (cl, cell, model, iter) => {
-				DateTime pubdate;
-				Gtk.CellRendererText crt = (Gtk.CellRendererText)cell;
-				model.get(iter, EpisodeColumn.PUBDATE, out pubdate, -1);
-				crt.markup = pubdate.format("<b>%d.%B %Y</b>\n%H:%M");
-			});
-			tree_view.append_column(tvcol);
-
-			tree_view.row_activated.connect( (path) => {
-				DateTime pubdate;
-				Gtk.TreeIter iter;
-
-				var model = tree_view.get_model();
-				model.get_iter(out iter, path);
-				model.get(iter, EpisodeColumn.PUBDATE, out pubdate, -1);
-
-				if (pubdate != null) {
-					debug(pubdate.format("%d.%m.%Y %T"));
-				}
-				else {
-					debug("NO Date");
-				}
-			});
-
-			tree_view.set_headers_visible(true);
-			tree_view.set_headers_clickable(true);
-
-
+			latest_episodes_view = new ListView(true);
 
 			var placeholder2 = new Gtk.Label("Here will be your offline episodes");
 			var placeholder3 = new Gtk.Label("Here will be your playlist");
 
 			var sw = new Gtk.ScrolledWindow(null, null);
-			sw.add(tree_view);
+			sw.add(latest_episodes_view);
 			stack.add_titled(sw, "stream", _("Stream"));
 
 
@@ -119,7 +53,10 @@ namespace Podsblitz {
 			});
 			vbox.pack_start(back_btn, false, true, 0);
 			var detail_header = new SubscriptionDetailHeader();
-			vbox.pack_start(detail_header, true, true, 0);
+			vbox.pack_start(detail_header, false, true, 0);
+
+			var episodes_view = new ListView(false);
+			vbox.pack_start(episodes_view, true, true, 0);
 
 			stack2.add_named(cover_view, "library-overview");
 			stack2.add_named(vbox, "library-detail");
@@ -130,11 +67,12 @@ namespace Podsblitz {
 				var subscription = app.get_subscription(id);
 				subscription.dump();
 
-				detail_header.set_image(subscription.cover_large);
+				detail_header.set_image(subscription.cover_medium);
 				// detail_header.set_title(subscription.title);
 				// detail_header.set_description(subscription.description);
 				detail_header.set_text(subscription.title, subscription.description);
 
+				episodes_view.set_episodes(subscription.episodes);
 
 				stack2.set_visible_child_name("library-detail");
 			});

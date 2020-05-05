@@ -165,7 +165,7 @@ namespace Podsblitz {
 
 				// UPSERT: https://stackoverflow.com/a/38463024
 
-				const string query1 = "UPDATE episodes SET guid=$guid, title=$title, description=$description, link=$link, pubdate=$pubdate, duration=$duration, subscription_id=$subscription_id, progress=$progress, completed=$completed, downloaded=$downloaded, file=$file WHERE guid=$guid";
+				const string query1 = "UPDATE episodes SET guid=$guid, title=$title, description=$description, link=$link, pubdate=$pubdate, duration=$duration, subscription_id=$subscription_id, progress=$progress, completed=$completed, downloaded=$downloaded, file=$file WHERE id=$id";
 				this.db.db.prepare_v2(query1, query1.length, out stmt, null);
 				stmt.bind_text(stmt.bind_parameter_index("$guid"), guid);
 				stmt.bind_text(stmt.bind_parameter_index("$title"), title);
@@ -178,11 +178,13 @@ namespace Podsblitz {
 				stmt.bind_int(stmt.bind_parameter_index("$completed"), (int)completed);
 				stmt.bind_int(stmt.bind_parameter_index("$downloaded"), (int)downloaded);
 				stmt.bind_text(stmt.bind_parameter_index("$file"), file != null ? file.get_uri() : "");
+				stmt.bind_int(stmt.bind_parameter_index("$id"), id);
+
 				if (stmt.step() != Sqlite.DONE) {
 					stderr.printf("Error: %s\n", this.db.db.errmsg());
 				}
-				const string query2 = "INSERT INTO episodes (guid, title, description, link, pubdate, duration, subscription_id, progress, completed, downloaded, file) SELECT $guid, $title, $description, $link, $pubdate, $duration, $subscription_id, $progress, $completed, $downloaded, $file WHERE (Select Changes() = 0)";
 
+				const string query2 = "INSERT INTO episodes (guid, title, description, link, pubdate, duration, subscription_id, progress, completed, downloaded, file) SELECT $guid, $title, $description, $link, $pubdate, $duration, $subscription_id, $progress, $completed, $downloaded, $file WHERE (Select Changes() = 0)";
 				this.db.db.prepare_v2(query2, query2.length, out stmt, null);
 				stmt.bind_text(stmt.bind_parameter_index("$guid"), guid);
 				stmt.bind_text(stmt.bind_parameter_index("$title"), title);
