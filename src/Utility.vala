@@ -38,4 +38,12 @@ namespace Podsblitz {
 		}
 		return seconds;
 	}
+
+
+	public string time_to_str(int seconds) {
+		int h = seconds / 3600;
+		int m = seconds % 3600 / 60;
+		int s = seconds % 60;
+		return "%02u:%02u:%02u".printf(h, m, s);
+	}
 }

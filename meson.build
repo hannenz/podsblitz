@@ -23,6 +23,7 @@ dependencies = [
 	dependency('libxml-2.0'),
 	dependency('gee-0.8'),
 	dependency('libsoup-2.4'),
+	dependency('gstreamer-player-1.0'),
 	meson.get_compiler('vala').find_library('posix')
 ]
 

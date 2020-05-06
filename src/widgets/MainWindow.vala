@@ -12,6 +12,8 @@ namespace Podsblitz {
 
 		public CoverView cover_view;
 		public ListView latest_episodes_view;
+		
+		public Player player;
 
 
 		public MainWindow(Application app) {
@@ -56,6 +58,11 @@ namespace Podsblitz {
 			vbox.pack_start(detail_header, false, true, 0);
 
 			var episodes_view = new ListView(false);
+			episodes_view.select.connect( (id) => {
+				// Get episode for id
+				// Get the uri of the episode
+				// this.player.play(uri);
+			});
 			vbox.pack_start(episodes_view, true, true, 0);
 
 			stack2.add_named(cover_view, "library-overview");
@@ -91,7 +98,7 @@ namespace Podsblitz {
 			paned.pack1(stack, true, false);
 
 
-			var player = new Player();
+			player = new Player();
 			// var player_vbox = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
 			// var player_cover = new Gtk.Image();
 			paned.pack2(player, false, false);
