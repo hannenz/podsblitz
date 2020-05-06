@@ -11,5 +11,6 @@ sources = files(
     'widgets/CellRendererDate.vala',
 	'widgets/CoverView.vala',
 	'widgets/ListView.vala',
-	'widgets/SubscriptionDetailHeader.vala'
+	'widgets/SubscriptionDetailHeader.vala',
+	'widgets/Player.vala'
 )

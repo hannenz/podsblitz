@@ -91,10 +91,11 @@ namespace Podsblitz {
 			paned.pack1(stack, true, false);
 
 
-			var player_vbox = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
+			var player = new Player();
+			// var player_vbox = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
 			// var player_cover = new Gtk.Image();
-			paned.pack2(player_vbox, false, false);
-			player_vbox.set_size_request(300, -1);
+			paned.pack2(player, false, false);
+			player.set_size_request(300, -1);
 
 
 			add(paned);
