@@ -12,6 +12,11 @@ public class Podsblitz.Player : Grid {
 	public Gst.Player player;
 	public Gst.PlayerState state;
 
+	public signal void play();
+	public signal void pause();
+	public signal void seek(int seconds);
+	public signal void skip();
+
 
 	public Player () {
 

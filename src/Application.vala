@@ -206,7 +206,7 @@ namespace Podsblitz {
 
 			var subscription = new Subscription();
 
-			registrate_subscription(subscription);
+			// registrate_subscription(subscription);
 
 			subscription.subscribe(url);
 		}
