@@ -16,6 +16,8 @@ public class Podsblitz.Player : Grid {
 	private Gtk.Image play_icon;
 	private Gtk.Image pause_icon;
 
+	private int current_duration;
+
 	public Player () {
 
 		player = new Gst.Player(null, null);
@@ -38,6 +40,12 @@ public class Podsblitz.Player : Grid {
 		progress_bar = new Scale(Orientation.HORIZONTAL, null);
 		progress_bar.set_draw_value(false);
 		progress_label = new Label(null);
+		var event_box = new EventBox();
+		event_box.add(progress_bar);
+		event_box.button_press_event.connect( (event) => {
+			debug("%u,%u".printf((uint)event.x, (uint)event.y));
+			return true;
+		});
 
 		speed_scale = new Gtk.Scale(Orientation.HORIZONTAL, new Gtk.Adjustment(0, 0.75, 3, 0.25, 0.25, 0.25));
 		speed_scale.set_draw_value(false);
@@ -60,19 +68,20 @@ public class Podsblitz.Player : Grid {
 
 		state = Gst.PlayerState.PLAYING;
 		player.duration_changed.connect( () => {
-			var adj = new Adjustment(0, 0, player.get_duration() / 1000000000, 1, 10, 10);
+			current_duration = (int)(player.get_duration() / 1000000000);
+			var adj = new Adjustment(0, 0, current_duration, 1, 10, 10);
 			progress_bar.set_adjustment(adj);
 		});
 
-		progress_bar.value_changed.connect( () => {
-			player.seek((Gst.ClockTime)(progress_bar.get_value() * 1000000000));
-		});
+		// progress_bar.clicked.connect( () => {
+		// 	player.seek((Gst.ClockTime)(progress_bar.get_value() * 1000000000));
+		// });
 
 		int y = 0;
 
 		attach(image, 0, y, 8, 8);
 		y = 8;
-		attach(progress_bar, 1, y++, 6, 1);
+		attach(event_box, 1, y++, 6, 1);
 		attach(progress_label, 3, y++, 3, 1);
 		var button_box = new ButtonBox(Orientation.HORIZONTAL);
 		button_box.set_layout(ButtonBoxStyle.EXPAND);
@@ -115,14 +124,21 @@ public class Podsblitz.Player : Grid {
 			seek(30);
 		});
 
-		player.position_updated.connect( (pos) => {
+		var config = player.get_config();
+		Gst.Player.config_set_position_update_interval(config, 5000);
 
+
+		player.position_updated.connect( (_pos) => {
+
+			int pos = (int)(player.get_position() / 1000000000);
+			
 			progress_label.set_text("%s / %s".printf(
-									time_to_str((int)(pos / 1000000000)), 
-									time_to_str((int)(player.get_duration() / 1000000000))
+									time_to_str(pos),
+									time_to_str(current_duration)
 									));
 
-			progress_bar.set_value(pos / 1000000000);
+			progress_bar.set_value(pos);
+			// return  true;
 		});
 
 	}
