@@ -1,0 +1,19 @@
+Update:
+
+foreach subscription; do
+	
+	fetch the XML at its url
+	update any properties (to db)
+
+	read all (? latest X) episodes from xml
+	foreach xml-episodes; do
+		if exists by GUID in db:
+			update db
+		else
+			create db
+	
+		
+
+	done
+done
+		

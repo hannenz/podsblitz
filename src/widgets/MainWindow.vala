@@ -60,8 +60,10 @@ namespace Podsblitz {
 			var episodes_view = new ListView(false);
 			episodes_view.select.connect( (id) => {
 				// Get episode for id
+				var episode = new Episode.by_id(id);
+				episode.dump();
 				// Get the uri of the episode
-				// this.player.play(uri);
+				this.player.play(episode.file.get_uri());
 			});
 			vbox.pack_start(episodes_view, true, true, 0);
 

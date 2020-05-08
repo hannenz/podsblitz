@@ -18,12 +18,34 @@ namespace Podsblitz {
 
 
 		public Episode() {
-
 		}
 
 
 		public Episode.from_sql_row(Sqlite.Statement stmt) {
 			read_sql_row(stmt);
+		}
+
+
+		public Episode.by_id(int id) {
+			try {
+				Sqlite.Statement stmt;
+
+				this.db = new Database();
+
+				const string query = "SELECT * FROM episodes WHERE id=$id";
+				this.db.db.prepare_v2(query, query.length, out stmt, null);
+				stmt.bind_int(stmt.bind_parameter_index("$id"), id);
+
+				if (stmt.step() != Sqlite.ROW) {
+					stderr.printf("Error: %s\n", this.db.db.errmsg());
+					return;
+				}
+
+				read_sql_row(stmt);
+			}
+			catch (DatabaseError e) {
+				stderr.printf("Database error: %s\n", e.message);
+			}
 		}
 
 
@@ -60,8 +82,21 @@ namespace Podsblitz {
 						break;
 
 					case "itunes:duration":
-						 duration = parse_time(item_iter->get_content());
+						duration = parse_time(item_iter->get_content());
 						break;
+
+					case "enclosure":
+						debug("** FOUND ENCLOSURE **");
+						Xml.Attr *attr;
+						for (attr = item_iter->properties; attr != null; attr = attr->next) {
+							if (attr->name == "url") {
+								debug(attr->children->content);
+								file = File.new_for_uri(attr->children->content);
+								break;
+							}
+						}
+						break;
+
 
 				}
 			}
@@ -81,6 +116,10 @@ namespace Podsblitz {
 
 				var column_name = stmt.column_name(i);
 				switch (column_name) {
+
+					case "id":
+						id = stmt.column_int(i);
+						break;
 
 					case "guid":
 						guid = stmt.column_text(i);
@@ -219,6 +258,7 @@ namespace Podsblitz {
 			print("Progress: %u\n", progress);
 			print("Completed: %s\n", completed ? "yes" : "no");
 			print("Date: %s\n", pubdate.format("%d.%m.%Y %H:%M"));
+			print("File: %s", file.get_uri());
 		}
 	}
 }
