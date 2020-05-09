@@ -45,27 +45,11 @@ public class Podsblitz.Player : Grid {
 		progress_bar.name = "progress-bar";
 		progress_bar.set_draw_value(false);
 		progress_label = new Label(null);
-		// progress_bar.set_sensitive(false);
-		// var event_box = new EventBox();
-		// event_box.add(progress_bar);
 		progress_bar.button_press_event.connect( (event) => {
 			var perc = (double)event.x / (double)progress_bar.get_allocated_width();
 			player.seek((Gst.ClockTime)(player.get_duration() * perc));
 			return true;
 		});
-
-		// speed_scale = new Gtk.Scale(Orientation.HORIZONTAL, new Gtk.Adjustment(0, 0.75, 3, 0.25, 0.25, 0.25));
-		// speed_scale.set_draw_value(false);
-		// speed_scale.add_mark(0.75, PositionType.BOTTOM, "0.75x");
-		// speed_scale.add_mark(1, PositionType.BOTTOM, "1x");
-		// speed_scale.add_mark(1.25, PositionType.BOTTOM, "1.25x");
-		// speed_scale.add_mark(2, PositionType.BOTTOM, "2x");
-		// speed_scale.add_mark(3, PositionType.BOTTOM, "3x");
-        //
-		// speed_scale.set_value(1.0);
-		// speed_scale.value_changed.connect( (range) => {
-		// 	player.set_rate(range.get_value());
-		// });
 
 		var speed_button = new Gtk.Button();
 		speed_button.set_label("%g×".printf(speed));
@@ -80,10 +64,9 @@ public class Podsblitz.Player : Grid {
 			speed = speeds[speed_index];
 		});
 
-		player.set_uri("https://cdn.podigee.com/media/podcast_17255_unter_pfarrerstochtern_episode_208542_sodom_und_gomorra.m4a?v=1587646976&amp;source=feed");
-		// player.set_uri("file:///home/hannenz/__Nextcloud/Messer_Banzani-Anthology_Vol_2-Skagga_Yo/01-19-Messer_Banzani-Peace_is_Wonder-128.mp3");
-		player.play();
-		play_button.set_image(pause_icon);
+		// player.set_uri("https://cdn.podigee.com/media/podcast_17255_unter_pfarrerstochtern_episode_208542_sodom_und_gomorra.m4a?v=1587646976&amp;source=feed");
+		// player.play();
+		// play_button.set_image(pause_icon);
 
 
 		state = Gst.PlayerState.PLAYING;

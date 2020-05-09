@@ -94,8 +94,8 @@ public class Podsblitz.ListView : Bin  {
 			select(id);
 		});
 
-		tree_view.set_headers_visible(true);
-		tree_view.set_headers_clickable(true);
+		tree_view.set_headers_visible(false);
+		// tree_view.set_headers_clickable(true);
 
 		swin = new ScrolledWindow(null, null);
 		swin.add(tree_view);
