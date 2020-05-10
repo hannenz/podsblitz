@@ -6,9 +6,8 @@ using Gtk;
  */
 public class Podsblitz.ListView : Bin  {
 
-	private Gtk.TreeView tree_view;
+	private Gtk.ListBox list_box;
 	private Gtk.ScrolledWindow swin;
-	private Gtk.ListStore model;
 
 	private bool with_cover = false;
 
@@ -18,93 +17,71 @@ public class Podsblitz.ListView : Bin  {
 
 		this.with_cover = with_cover;
 
-		model = new Gtk.ListStore(
-			EpisodeColumn.N_COLUMNS,
-			typeof(int), 					// ID (database)
-			typeof(string), 				// GUID
-			typeof(Gdk.Pixbuf), 			// Cover
-			typeof(string), 				// Episode title
-			typeof(string), 				// Episode description
-			typeof(string), 				// Podcast title
-			typeof(DateTime), 				// Publication  date
-			typeof(uint) 					// duration (seconds)
-		);
 
-		model.set_default_sort_func((model, iter1, iter2) => {
-			DateTime date1, date2;
-			model.get(iter1, EpisodeColumn.PUBDATE, out date1, -1);
-			model.get(iter2, EpisodeColumn.PUBDATE, out date2, -1);
-			return date1.compare(date2);
+		list_box = new ListBox();
+		// list_box.bind_model(model, create_list_box_item);
+		list_box.set_sort_func( (row1, row2) => {
+			var episode1 = row1.get_child() as Episode;
+			var episode2 = row2.get_child() as Episode;
+			return episode1.pubdate.compare(episode2.pubdate);
 		});
 
+		list_box.row_activated.connect( (row) => {
 
-		tree_view = new TreeView.with_model(model);
-
-		var cell = new Gtk.CellRendererPixbuf();
-		var tvcol = new Gtk.TreeViewColumn();
-		tvcol.set_title("Cover");
-		tvcol.pack_start(cell, false);
-		tvcol.set_attributes(cell, "pixbuf", EpisodeColumn.COVER);
-		tvcol.set_sizing(Gtk.TreeViewColumnSizing.FIXED);
-		tvcol.set_fixed_width(CoverSize.SMALL); // sohuld be SMALL later!!
-		tree_view.append_column(tvcol);
-		tvcol.set_visible(with_cover);
-
-
-		var body_cell = new Gtk.CellRendererText();
-		body_cell.set("wrap-mode", Pango.WrapMode.WORD_CHAR);
-		body_cell.set("wrap-width", 400);
-		body_cell.set("yalign", 0);
-		tvcol = new Gtk.TreeViewColumn();
-		tvcol.set_title("Description");
-		tvcol.pack_start(body_cell, false);
-		tvcol.set_cell_data_func(body_cell, (cl, cell, model, iter) => {
-			Gtk.CellRendererText crt = (Gtk.CellRendererText)cell;
-			string title, description, subscription_title, markup;
-			model.get(iter, EpisodeColumn.TITLE, out title, EpisodeColumn.DESCRIPTION, out description, EpisodeColumn.SUBSCRIPTION_TITLE, out subscription_title, -1);
-			markup = @"<b><big>$title</big></b>\n";
-			if (with_cover) {
-				markup += @"<b>$subscription_title</b>\n";
-			}
-			markup += truncate(description, 3000);
-			crt.markup = markup;
-		});
-		tvcol.set_expand(true);
-		tree_view.append_column(tvcol);
-
-		var date_cell = new Gtk.CellRendererText();
-		date_cell.set("yalign", 0);
-		tvcol = new Gtk.TreeViewColumn();
-		tvcol.set_title("Date");
-		tvcol.pack_start(date_cell, false);
-		tvcol.set_cell_data_func(date_cell, (cl, cell, model, iter) => {
-			DateTime pubdate;
-			Gtk.CellRendererText crt = (Gtk.CellRendererText)cell;
-			model.get(iter, EpisodeColumn.PUBDATE, out pubdate, -1);
-			crt.markup = pubdate.format("<big>%e.%B %Y</big>\n%H:%M");
-		});
-		tree_view.append_column(tvcol);
-
-		tree_view.row_activated.connect( (path) => {
-			int id;
-			Gtk.TreeIter iter;
-			var model = tree_view.get_model();
-			model.get_iter(out iter, path);
-			model.get(iter, EpisodeColumn.ID, out id, -1);
-			select(id);
+			// int id;
+			// Gtk.TreeIter iter;
+			// var model = tree_view.get_model();
+			// model.get_iter(out iter, path);
+			// model.get(iter, EpisodeColumn.ID, out id, -1);
+			// select(id);
 		});
 
-		tree_view.set_headers_visible(false);
+		// tree_view.set_headers_visible(false);
 		// tree_view.set_headers_clickable(true);
 
 		swin = new ScrolledWindow(null, null);
-		swin.add(tree_view);
+		swin.add(list_box);
 		add(swin);
 	}
 
 
+	private Widget create_list_box_item(Episode episode) {
+
+		var item = new Grid();
+		item.column_spacing = 10;
+
+		var title = new Label(null);
+		title.set_markup("<big><b>%s</b></big>".printf(episode.title));
+		title.set_line_wrap(true);
+		title.set_xalign(0);
+
+		var descr = new Label(episode.description);
+		descr.set_line_wrap(true);
+		descr.set_xalign(0);
+
+		var action_bar = new ActionBar();
+
+		var play_btn = new Gtk.Button();
+		play_btn.set_image(new Gtk.Image.from_icon_name("media-playback-start-symbolic", IconSize.BUTTON));
+
+		var dl_btn = new Gtk.Button();
+		dl_btn.set_image(new Gtk.Image.from_icon_name("document-save-symbolic", IconSize.BUTTON));
+
+		action_bar.pack_start(play_btn);
+		action_bar.pack_start(dl_btn);
+
+		item.attach(title, 0, 0, 12, 1);
+		item.attach(descr, 0, 1, 12, 1);
+		item.attach(action_bar, 0, 2, 12, 1);
+
+		item.set_margin_top(20);
+		item.show_all();
+		return item;
+	}
+
+
 	public void clear() {
-		model.clear();
+		// model.clear();
 	}
 
 
@@ -118,17 +95,6 @@ public class Podsblitz.ListView : Bin  {
 
 
 	public void append(Episode episode) {
-		Gtk.TreeIter iter;
-		// var subcription = new Subscription.by_id(episode.subscription_id);
-		model.append(out iter);
-		model.set(iter,
-				  EpisodeColumn.ID, episode.id,
-				  EpisodeColumn.GUID, episode.guid,
-				  EpisodeColumn.TITLE, episode.title,
-				  EpisodeColumn.DESCRIPTION, episode.description,
-				  EpisodeColumn.PUBDATE, episode.pubdate,
-				  // EpisodeColumn.SUBSCRIPTION_TITLE, subscription.title,
-				  -1
-				 );
+		list_box.add(create_list_box_item(episode));
 	}
 }

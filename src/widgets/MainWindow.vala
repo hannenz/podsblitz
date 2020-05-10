@@ -67,6 +67,9 @@ namespace Podsblitz {
 			});
 			vbox.pack_start(episodes_view, true, true, 0);
 
+			var action_bar = new Gtk.ActionBar();
+			action_bar.
+
 			stack2.add_named(cover_view, "library-overview");
 			stack2.add_named(vbox, "library-detail");
 
