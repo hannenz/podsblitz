@@ -67,8 +67,8 @@ namespace Podsblitz {
 			});
 			vbox.pack_start(episodes_view, true, true, 0);
 
-			var action_bar = new Gtk.ActionBar();
-			action_bar.
+			// var action_bar = new Gtk.ActionBar();
+			// action_bar.
 
 			stack2.add_named(cover_view, "library-overview");
 			stack2.add_named(vbox, "library-detail");
@@ -113,7 +113,16 @@ namespace Podsblitz {
 			add(paned);
 
 			var headerbar = new HeaderBar(this);
+			var menu_btn = new Gtk.MenuButton();
+			menu_btn.image = new Gtk.Image.from_icon_name("open-menu-symbolic", Gtk.IconSize.SMALL_TOOLBAR);
+			menu_btn.tooltip_text = _("Settings");
+
+			var menu_popover = new Gtk.Popover(menu_btn);
+			menu_btn.popover = menu_popover;
+			
+			headerbar.pack_end(menu_btn);
 			set_titlebar(headerbar);
+
 		}
 
 
