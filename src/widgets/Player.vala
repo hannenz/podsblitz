@@ -9,6 +9,7 @@ public class Podsblitz.Player : Grid {
 	public Gtk.Button skip_button;
 	public Gtk.Scale progress_bar;
 	public Gtk.Label progress_label;
+	public Gtk.Label title_label;
 	public Gst.Player player;
 	public Gst.PlayerState state;
 	public Gtk.Scale speed_scale;
@@ -40,6 +41,8 @@ public class Podsblitz.Player : Grid {
 		fwd_button.set_relief(ReliefStyle.NONE);
 		bck_button.set_relief(ReliefStyle.NONE);
 		skip_button.set_relief(ReliefStyle.NONE);
+
+		title_label = new Label(null);
 
 		progress_bar = new Scale(Orientation.HORIZONTAL, null);
 		progress_bar.name = "progress-bar";
@@ -92,6 +95,7 @@ public class Podsblitz.Player : Grid {
 		attach(button_box, 2, y++, 4, 1);
 		// attach(speed_scale, 3, y++, 3, 1);
 		attach(speed_button, 3, y++, 2, 1);
+		attach(title_label, 0, y++, 8, 1);
 
 
 
@@ -147,12 +151,25 @@ public class Podsblitz.Player : Grid {
 			progress_bar.set_value(pos);
 		});
 
+
+
+	}
+
+	public void set_title(string title) {
+		title_label.set_markup(title);
+	}
+
+	public void set_cover(Gdk.Pixbuf pixbuf) {
+		image.set_from_pixbuf(pixbuf);
 	}
 	
 
 	public void play(string uri) {
 		player.set_uri(uri);
 		player.play();
+
+		state = Gst.PlayerState.PLAYING;
+		play_button.set_image(pause_icon);
 	}
 
 

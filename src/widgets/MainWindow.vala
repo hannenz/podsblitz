@@ -58,11 +58,13 @@ namespace Podsblitz {
 			vbox.pack_start(detail_header, false, true, 0);
 
 			var episodes_view = new ListView(false);
-			episodes_view.select.connect( (id) => {
+			episodes_view.play.connect( (id) => {
 				// Get episode for id
 				var episode = new Episode.by_id(id);
-				episode.dump();
-				// Get the uri of the episode
+				// episode.dump();
+				var cover = episode.get_cover(CoverSize.LARGE);
+				this.player.set_cover(cover);
+				this.player.set_title(episode.title);
 				this.player.play(episode.file.get_uri());
 			});
 			vbox.pack_start(episodes_view, true, true, 0);
@@ -74,10 +76,9 @@ namespace Podsblitz {
 			stack2.add_named(vbox, "library-detail");
 
 			cover_view.select.connect( (id) => {
-				print("Clicked on an icon view item: %u\n", id);
 
 				var subscription = app.get_subscription(id);
-				subscription.dump();
+				// subscription.dump();
 
 				detail_header.set_image(subscription.cover_medium);
 				// detail_header.set_title(subscription.title);

@@ -247,6 +247,45 @@ namespace Podsblitz {
 			}
 		}
 
+
+		/**
+		 * Return an appropriate image (cover) for the episode, most likely the
+		 * cover of its subscription
+		 *
+		 * @param Podsblitz.CoverSize size
+		 * @return Gdk.Pixbuf
+		 */
+		public Gdk.Pixbuf get_cover(CoverSize size = CoverSize.MEDIUM) {
+
+			Gdk.Pixbuf cover;
+			debug(subscription_id.to_string());
+
+			assert(subscription_id > 0);
+
+			var subscription = new Subscription.by_id(subscription_id);
+			subscription.dump();
+
+			switch (size) {
+
+				case CoverSize.LARGE:
+					cover = subscription.cover_large;
+					break;
+
+				case CoverSize.MEDIUM:
+					cover = subscription.cover_medium;
+					break;
+
+				case CoverSize.SMALL:
+				default:
+					cover = subscription.cover_small;
+					break;
+
+			}
+
+			assert(cover != null);
+			return cover.copy();
+		}
+
 			
 
 		public void dump() {

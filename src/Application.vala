@@ -11,20 +11,9 @@ namespace Podsblitz {
 		N_COLUMNS
 	}
 
-	enum EpisodeColumn {
-		ID,
-		GUID,
-		COVER,
-		TITLE,
-		DESCRIPTION,
-		SUBSCRIPTION_TITLE,
-		PUBDATE,
-		DURATION,
-		N_COLUMNS
-	}
 
 
-	enum CoverSize {
+	public enum CoverSize {
 		SMALL = 90,
 		MEDIUM = 150,
 		LARGE = 300
@@ -34,8 +23,6 @@ namespace Podsblitz {
 
 
 		public static GLib.Settings settings;
-
-		// protected Gtk.ListStore library;
 
 		public MainWindow main_window;
 

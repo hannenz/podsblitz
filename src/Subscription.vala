@@ -105,6 +105,11 @@ namespace Podsblitz {
 
 
 		public Subscription.by_id(int id) {
+
+			assert(id > 0);
+
+			this();
+
 			try {
 				Sqlite.Statement stmt;
 
@@ -157,6 +162,19 @@ namespace Podsblitz {
 						break;
 
 					case "cover":
+						try {
+							uint8[] buffer;
+							buffer = Base64.decode(stmt.column_text(i));
+							var istream = new MemoryInputStream.from_data(buffer, GLib.free);
+							cover = new Gdk.Pixbuf.from_stream(istream, null);
+						}
+						catch (Error e) {
+							stderr.printf("Failed to create pixbuf for cover: %s\n", e.message);
+						}
+
+						cover_large = cover.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
+						cover_medium = cover.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
+						cover_small = cover.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
 						break;
 
 					case "pos":

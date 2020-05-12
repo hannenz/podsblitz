@@ -11,33 +11,22 @@ public class Podsblitz.ListView : Bin  {
 
 	private bool with_cover = false;
 
-	public signal void select(int episode_id);
+	public signal void play(int episode_id);
 
 	public ListView(bool with_cover) {
 
 		this.with_cover = with_cover;
 
-
 		list_box = new ListBox();
-		// list_box.bind_model(model, create_list_box_item);
-		list_box.set_sort_func( (row1, row2) => {
-			var episode1 = row1.get_child() as Episode;
-			var episode2 = row2.get_child() as Episode;
-			return episode1.pubdate.compare(episode2.pubdate);
-		});
+		// list_box.set_sort_func( (row1, row2) => {
+		// 	var episode1 = row1.get_child() as Episode;
+		// 	var episode2 = row2.get_child() as Episode;
+		// 	return episode1.pubdate.compare(episode2.pubdate);
+		// });
 
 		list_box.row_activated.connect( (row) => {
-
-			// int id;
-			// Gtk.TreeIter iter;
-			// var model = tree_view.get_model();
-			// model.get_iter(out iter, path);
-			// model.get(iter, EpisodeColumn.ID, out id, -1);
-			// select(id);
+			//
 		});
-
-		// tree_view.set_headers_visible(false);
-		// tree_view.set_headers_clickable(true);
 
 		swin = new ScrolledWindow(null, null);
 		swin.add(list_box);
@@ -59,10 +48,22 @@ public class Podsblitz.ListView : Bin  {
 		descr.set_line_wrap(true);
 		descr.set_xalign(0);
 
+		var date = new Label(null);
+		date.set_markup("<b>%s</b>\n%s".printf(
+				episode.pubdate.format("%d.%m"),
+				episode.pubdate.format("%Y")
+		));
+		date.set_yalign(0);
+
+
 		var action_bar = new ActionBar();
 
 		var play_btn = new Gtk.Button();
 		play_btn.set_image(new Gtk.Image.from_icon_name("media-playback-start-symbolic", IconSize.BUTTON));
+		play_btn.clicked.connect( () => {
+			this.play(episode.id);
+		});
+
 
 		var dl_btn = new Gtk.Button();
 		dl_btn.set_image(new Gtk.Image.from_icon_name("document-save-symbolic", IconSize.BUTTON));
@@ -70,8 +71,9 @@ public class Podsblitz.ListView : Bin  {
 		action_bar.pack_start(play_btn);
 		action_bar.pack_start(dl_btn);
 
-		item.attach(title, 0, 0, 12, 1);
-		item.attach(descr, 0, 1, 12, 1);
+		item.attach(date, 0, 0, 2, 2);
+		item.attach(title, 2, 0, 10, 1);
+		item.attach(descr, 2, 1, 10, 1);
 		item.attach(action_bar, 0, 2, 12, 1);
 
 		item.set_margin_top(20);
@@ -81,7 +83,7 @@ public class Podsblitz.ListView : Bin  {
 
 
 	public void clear() {
-		// model.clear();
+		list_box.get_children().foreach( (row) => list_box.remove(row));
 	}
 
 
