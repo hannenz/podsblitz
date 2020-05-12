@@ -14,6 +14,7 @@ namespace Podsblitz {
 		public ListView latest_episodes_view;
 		
 		public Player player;
+		public Subscription subscription = null;
 
 
 		public MainWindow(Application app) {
@@ -49,12 +50,19 @@ namespace Podsblitz {
 
 
 			var vbox = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
-			var back_btn = new Gtk.Button.with_label("zurück");
-			back_btn.clicked.connect( () => {
-				stack2.set_visible_child_name("library-overview");
-			});
-			vbox.pack_start(back_btn, false, true, 0);
+			// var back_btn = new Gtk.Button.with_label("zurück");
+			// back_btn.clicked.connect( () => {
+			// 	stack2.set_visible_child_name("library-overview");
+			// });
+			// vbox.pack_start(back_btn, false, true, 0);
 			var detail_header = new SubscriptionDetailHeader();
+			detail_header.update_request.connect( () => {
+				subscription.fetch_async.begin( (obj, res) => {
+					subscription.fetch_async.end(res);
+					subscription.save();
+				});
+			});
+
 			vbox.pack_start(detail_header, false, true, 0);
 
 			var episodes_view = new ListView(false);
@@ -77,7 +85,7 @@ namespace Podsblitz {
 
 			cover_view.select.connect( (id) => {
 
-				var subscription = app.get_subscription(id);
+				subscription = app.get_subscription(id);
 				// subscription.dump();
 
 				detail_header.set_image(subscription.cover_medium);
@@ -108,7 +116,7 @@ namespace Podsblitz {
 			// var player_vbox = new Gtk.Box(Gtk.Orientation.VERTICAL, 0);
 			// var player_cover = new Gtk.Image();
 			paned.pack2(player, false, false);
-			player.set_size_request(300, -1);
+			player.set_size_request(CoverSize.LARGE, -1);
 
 
 			add(paned);
@@ -120,10 +128,21 @@ namespace Podsblitz {
 
 			var menu_popover = new Gtk.Popover(menu_btn);
 			menu_btn.popover = menu_popover;
+
+			cover_view.map.connect( () => {
+				headerbar.back_button.sensitive = false;
+			});
+			vbox.map.connect( () => {
+				headerbar.back_button.sensitive = true;
+			});
+
+			headerbar.back_button_clicked.connect( () => {
+				stack2.set_visible_child_name("library-overview");
+			});
+
 			
 			headerbar.pack_end(menu_btn);
 			set_titlebar(headerbar);
-
 		}
 
 
@@ -132,7 +151,7 @@ namespace Podsblitz {
 				GLib.Source.remove(configure_id);
 			}
 
-			configure_id = Timeout.add(100, () => {
+			configure_id = Timeout.add(500, () => {
 				configure_id = 0;
 
 				if (is_maximized) {

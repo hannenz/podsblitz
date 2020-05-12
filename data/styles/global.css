@@ -26,3 +26,9 @@ grid {
 	box-shadow: none;
 }
 
+.episode-item {
+	background-color: #ffffff;
+	border: 1px solid #f0f0f0;
+	box-shadow: 3px 3px 5px rgba(50, 50, 50, 0.1);
+	padding: 30px 20px;
+}

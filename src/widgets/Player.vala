@@ -43,6 +43,7 @@ public class Podsblitz.Player : Grid {
 		skip_button.set_relief(ReliefStyle.NONE);
 
 		title_label = new Label(null);
+		title_label.set_line_wrap(true);
 
 		progress_bar = new Scale(Orientation.HORIZONTAL, null);
 		progress_bar.name = "progress-bar";

@@ -115,7 +115,7 @@ namespace Podsblitz {
 		protected void load_subscriptions() {
 
 			try {
-				this.db.query("SELECT * FROM subscriptions LIMIT 6");
+				this.db.query("SELECT * FROM subscriptions");
 				var results = this.db.getAll();
 				foreach (Gee.HashMap<string,string> result in results) {
 					var subscription = new Subscription.from_hash_map(result);
@@ -141,44 +141,6 @@ namespace Podsblitz {
 
 
 
-		/**
-		 * Add a subscription to the ListStore and connect signals
-		 *
-		 * @param Podsblitz.Subscription subscription
-		 * @return void
-		 */
-		private void registrate_subscription(Subscription subscription) {
-
-			// Gtk.TreeIter iter;
-			// this.library.append(out iter);
-			// this.library.set(iter,
-			// 				 SubscriptionColumn.ID, subscription.id,
-			// 				 SubscriptionColumn.COVER, subscription.cover,
-			// 				 SubscriptionColumn.TITLE, Markup.escape_text(subscription.title), 
-			// 				 SubscriptionColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
-			// 				 SubscriptionColumn.DESCRIPTION, Markup.escape_text(subscription.description),
-			// 				 SubscriptionColumn.POSITION, subscription.pos,
-			// 				 SubscriptionColumn.URL, subscription.url,
-			// 				 -1);
-            //
-			// subscription.iter = iter;
-            //
-			// subscription.changed.connect((subscription) => {
-			// 	debug("Subscription has changed, updating TreeStore and saving it to db now\n");
-			// 	this.library.set(subscription.iter,
-			// 					 SubscriptionColumn.ID, subscription.id,
-			// 					 SubscriptionColumn.COVER, subscription.cover,
-			// 					 SubscriptionColumn.TITLE, Markup.escape_text(subscription.title), 
-			// 					 SubscriptionColumn.TITLE_SHORT, Markup.escape_text(truncate(subscription.title, 200)),
-			// 					 SubscriptionColumn.DESCRIPTION, Markup.escape_text(subscription.description),
-			// 					 SubscriptionColumn.POSITION, subscription.pos,
-			// 					 SubscriptionColumn.URL, subscription.url,
-			// 					 -1
-			// 			);
-			// 	subscription.save();
-			// });
-		}
-
 
 
 
@@ -203,7 +165,7 @@ namespace Podsblitz {
 		 * Update all subscriptions
 		 */
 		public void update_subscriptions() {
-			debug("Updating subsccriptions\n");
+			debug("Updating subscriptions\n");
 
 			foreach (var subscription in subscriptions) {
 				debug("Updating subscription: %s (%s)\n", subscription.title, subscription.url);
@@ -216,7 +178,6 @@ namespace Podsblitz {
 					subscription.save();
 
 					main_window.latest_episodes_view.set_episodes(subscription.episodes);
-
 				});
 
 				subscription.fetch_cover_async.begin((obj, res) => {

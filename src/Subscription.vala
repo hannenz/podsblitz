@@ -68,7 +68,7 @@ namespace Podsblitz {
 			title = map["title"];
 			description = map["description"];
 			url = map["url"];
-			uint8[] buffer;
+			// uint8[] buffer;
 
 			// debug("[%s]".printf(map["cover"].substring(0, 100)));
 
@@ -76,13 +76,18 @@ namespace Podsblitz {
 			cover = noimage;
 
 			try {
-				buffer = Base64.decode(map["cover"]);
-				var istream = new MemoryInputStream.from_data(buffer, GLib.free);
-				cover = new Gdk.Pixbuf.from_stream(istream, null);
+			// 	buffer = Base64.decode(map["cover"]);
+			// 	var istream = new MemoryInputStream.from_data(buffer, GLib.free);
+			// 	cover = new Gdk.Pixbuf.from_stream(istream, null);
+				var loader = new Gdk.PixbufLoader();
+				loader.write(Base64.decode(map["cover"]));
+				cover = loader.get_pixbuf();
+				loader.close();
 			}
 			catch (Error e) {
 				stderr.printf("Failed to create pixbuf for cover: %s\n", e.message);
 			}
+
 
 			cover_large = cover.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
 			cover_medium = cover.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
@@ -110,23 +115,18 @@ namespace Podsblitz {
 
 			this();
 
-			try {
-				Sqlite.Statement stmt;
+			Sqlite.Statement stmt;
 
-				const string query = "SELECT * FROM subscriptions WHERE id=$id";
-				this.db.db.prepare_v2(query, query.length, out stmt, null);
-				stmt.bind_int(stmt.bind_parameter_index("$id"), id);
+			const string query = "SELECT * FROM subscriptions WHERE id=$id";
+			this.db.db.prepare_v2(query, query.length, out stmt, null);
+			stmt.bind_int(stmt.bind_parameter_index("$id"), id);
 
-				if (stmt.step() != Sqlite.ROW) {
-					stderr.printf("Error: %s\n", this.db.db.errmsg());
-					return;
-				}
-
-				read_sql_row(stmt);
+			if (stmt.step() != Sqlite.ROW) {
+				stderr.printf("Error: %s\n", this.db.db.errmsg());
+				return;
 			}
-			catch (DatabaseError e) {
-				stderr.printf("Database error: %s\n", e.message);
-			}
+
+			read_sql_row(stmt);
 		}
 
 

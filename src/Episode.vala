@@ -258,12 +258,10 @@ namespace Podsblitz {
 		public Gdk.Pixbuf get_cover(CoverSize size = CoverSize.MEDIUM) {
 
 			Gdk.Pixbuf cover;
-			debug(subscription_id.to_string());
 
 			assert(subscription_id > 0);
 
 			var subscription = new Subscription.by_id(subscription_id);
-			subscription.dump();
 
 			switch (size) {
 

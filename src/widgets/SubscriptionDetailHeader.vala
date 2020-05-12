@@ -6,10 +6,12 @@ public class Podsblitz.SubscriptionDetailHeader : Grid {
 	public Gtk.TextView text_view;
 	public Gtk.TextBuffer text_buffer;
 
+	public signal void update_request();
+	public signal void unsubscribe_request();
 
 	public SubscriptionDetailHeader() {
 
-		column_homogeneous = true;
+		column_homogeneous = false;
 		row_homogeneous = false;
 		column_spacing = 10;
 		row_spacing = 0;
@@ -17,6 +19,7 @@ public class Podsblitz.SubscriptionDetailHeader : Grid {
 		white.red = white.green = white.blue = white.alpha = 1.0;
 
 		image = new Gtk.Image();
+		image.set_size_request(CoverSize.MEDIUM, CoverSize.MEDIUM);
 		text_buffer = new Gtk.TextBuffer(null);
 		text_buffer.set_text("Platzhalter");
 		text_view = new Gtk.TextView.with_buffer(text_buffer);
@@ -25,10 +28,25 @@ public class Podsblitz.SubscriptionDetailHeader : Grid {
 		text_view.set_editable(false);
 
 		var swin = new ScrolledWindow(null, null);
+		swin.hexpand = true;
 		swin.add(text_view);
 
 		attach(image, 0, 0, 1, 1);
 		attach(swin, 1, 0, 3, 1);
+
+		var action_bar = new Gtk.ActionBar();
+		var update_btn = new Gtk.Button.from_icon_name("view-refresh-symbolic", IconSize.BUTTON);
+		update_btn.clicked.connect( () => {
+			this.update_request();
+		});
+		action_bar.pack_start(update_btn);
+		var unsubscribe_btn = new Gtk.Button.from_icon_name("view-refresh-symbolic", IconSize.BUTTON);
+		unsubscribe_btn.clicked.connect( () => {
+			this.unsubscribe_request();
+		});
+		action_bar.pack_start(unsubscribe_btn);
+
+		attach(action_bar, 0, 1, 4, 1);
 
 		show_all();
 	}

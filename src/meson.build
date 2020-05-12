@@ -12,5 +12,6 @@ sources = files(
 	'widgets/CoverView.vala',
 	'widgets/ListView.vala',
 	'widgets/SubscriptionDetailHeader.vala',
-	'widgets/Player.vala'
+	'widgets/Player.vala',
+	'widgets/EpisodeItem.vala'
 )
