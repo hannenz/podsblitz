@@ -298,7 +298,9 @@ namespace Podsblitz {
 				if (iter->name == "item") {
 					var episode = new Episode.from_xml_node(iter);
 					episode.subscription_id = this.id;
-					this.episodes.append(episode);
+					this.episodes.insert_sorted(episode, (a, b) => {
+						return b.pubdate.compare(a.pubdate);
+					});
 				}
 
 				parse_node(iter);

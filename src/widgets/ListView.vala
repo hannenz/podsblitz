@@ -24,7 +24,7 @@ public class Podsblitz.ListView : Bin  {
 
 
 	private Widget create_list_box_item(Episode episode) {
-		var item = new EpisodeItem(episode, false);
+		var item = new EpisodeItem(episode, with_cover);
 		item.play.connect( (episode_id) => {
 			this.play(episode_id);
 		});

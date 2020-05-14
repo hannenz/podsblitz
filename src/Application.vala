@@ -115,12 +115,27 @@ namespace Podsblitz {
 		protected void load_subscriptions() {
 
 			try {
+				var stream = new List<Episode>();
+
 				this.db.query("SELECT * FROM subscriptions");
 				var results = this.db.getAll();
 				foreach (Gee.HashMap<string,string> result in results) {
 					var subscription = new Subscription.from_hash_map(result);
 					subscriptions.append(subscription);
+
+					int i = 0;
+					foreach (var episode in subscription.episodes) {
+						stream.insert_sorted(episode, (a, b) => {
+							return b.pubdate.compare(a.pubdate);
+						});
+						if (++i > 5) {
+							break;
+						}
+					}
 				}
+
+				main_window.latest_episodes_view.clear();
+				main_window.latest_episodes_view.set_episodes(stream);
 			}
 			catch (DatabaseError e) {
 				stderr.printf("Database error: %s\n", e.message);

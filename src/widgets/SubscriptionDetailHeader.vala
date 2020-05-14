@@ -5,6 +5,8 @@ public class Podsblitz.SubscriptionDetailHeader : Grid {
 	public Gtk.Image image;
 	public Gtk.TextView text_view;
 	public Gtk.TextBuffer text_buffer;
+	public Gtk.Spinner spinner;
+	public Gtk.Button update_btn;
 
 	public signal void update_request();
 	public signal void unsubscribe_request();
@@ -35,16 +37,21 @@ public class Podsblitz.SubscriptionDetailHeader : Grid {
 		attach(swin, 1, 0, 3, 1);
 
 		var action_bar = new Gtk.ActionBar();
-		var update_btn = new Gtk.Button.from_icon_name("view-refresh-symbolic", IconSize.BUTTON);
+		update_btn = new Gtk.Button.from_icon_name("view-refresh-symbolic", IconSize.BUTTON);
 		update_btn.clicked.connect( () => {
 			this.update_request();
 		});
 		action_bar.pack_start(update_btn);
-		var unsubscribe_btn = new Gtk.Button.from_icon_name("view-refresh-symbolic", IconSize.BUTTON);
+		var unsubscribe_btn = new Gtk.Button.from_icon_name("user-trash-symbolic", IconSize.BUTTON);
 		unsubscribe_btn.clicked.connect( () => {
 			this.unsubscribe_request();
 		});
 		action_bar.pack_start(unsubscribe_btn);
+
+		spinner = new Spinner();
+		spinner.visible = false;
+		action_bar.pack_start(spinner);
+
 
 		attach(action_bar, 0, 1, 4, 1);
 

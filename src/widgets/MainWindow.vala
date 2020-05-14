@@ -55,15 +55,7 @@ namespace Podsblitz {
 			// 	stack2.set_visible_child_name("library-overview");
 			// });
 			// vbox.pack_start(back_btn, false, true, 0);
-			var detail_header = new SubscriptionDetailHeader();
-			detail_header.update_request.connect( () => {
-				subscription.fetch_async.begin( (obj, res) => {
-					subscription.fetch_async.end(res);
-					subscription.save();
-				});
-			});
 
-			vbox.pack_start(detail_header, false, true, 0);
 
 			var episodes_view = new ListView(false);
 			episodes_view.play.connect( (id) => {
@@ -75,10 +67,27 @@ namespace Podsblitz {
 				this.player.set_title(episode.title);
 				this.player.play(episode.file.get_uri());
 			});
-			vbox.pack_start(episodes_view, true, true, 0);
 
-			// var action_bar = new Gtk.ActionBar();
-			// action_bar.
+			var detail_header = new SubscriptionDetailHeader();
+			detail_header.update_request.connect( () => {
+
+				detail_header.spinner.visible = true;
+				detail_header.spinner.start();
+				detail_header.update_btn.sensitive = false;
+
+				subscription.fetch_async.begin( (obj, res) => {
+					subscription.fetch_async.end(res);
+					subscription.save();
+					detail_header.spinner.visible = false;
+					detail_header.spinner.stop();
+					detail_header.update_btn.sensitive = true;
+					episodes_view.clear();
+					episodes_view.set_episodes(subscription.episodes);
+				});
+			});
+
+			vbox.pack_start(detail_header, false, true, 0);
+			vbox.pack_start(episodes_view, true, true, 0);
 
 			stack2.add_named(cover_view, "library-overview");
 			stack2.add_named(vbox, "library-detail");
