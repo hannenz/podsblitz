@@ -75,12 +75,15 @@ namespace Podsblitz {
 				detail_header.spinner.start();
 				detail_header.update_btn.sensitive = false;
 
+				debug("*** FETCHING ***");
 				subscription.fetch_async.begin( (obj, res) => {
 					subscription.fetch_async.end(res);
+					debug("*** SAVING ***");
 					subscription.save();
 					detail_header.spinner.visible = false;
 					detail_header.spinner.stop();
 					detail_header.update_btn.sensitive = true;
+					debug("*** UPDATE GUI ***");
 					episodes_view.clear();
 					episodes_view.set_episodes(subscription.episodes);
 				});

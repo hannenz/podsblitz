@@ -12,6 +12,7 @@ namespace Podsblitz {
 		public bool completed { get; set; }
 		public DateTime pubdate { get; set; }
 		public int subscription_id { get; set; }
+		public string subscription_title { get; set; }
 		public bool downloaded { get; set; }
 		public File file { get; set; }
 		protected Database db;
@@ -96,8 +97,6 @@ namespace Podsblitz {
 							}
 						}
 						break;
-
-
 				}
 			}
 		}
@@ -115,54 +114,59 @@ namespace Podsblitz {
 			for (int i = 0; i < cols; i++) {
 
 				var column_name = stmt.column_name(i);
+				debug(column_name);
 				switch (column_name) {
 
 					case "id":
 						id = stmt.column_int(i);
 						break;
 
-					case "guid":
+					case "episode_guid":
 						guid = stmt.column_text(i);
 						break;
 
-					case "title":
+					case "episode_title":
 						title = stmt.column_text(i);
 						break;
 
-					case "description":
+					case "episode_description":
 						description = stmt.column_text(i);
 						break;
 
-					case "link":
+					case "episode_link":
 						link = stmt.column_text(i);
 						break;
 
-					case "pubdate":
+					case "episode_pubdate":
 						pubdate = new DateTime.from_iso8601(stmt.column_text(i), new TimeZone.local());
 						break;
 
-					case "duration":
+					case "episode_duration":
 						duration = stmt.column_int(i);
 						break;
 
-					case "subscription_id":
+					case "episode_subscription_id":
 						subscription_id = stmt.column_int(i);
 						break;
 
-					case "progress":
+					case "episode_progress":
 						progress = stmt.column_int(i);
 						break;
 
-					case "completed":
+					case "episode_completed":
 						completed = (bool)stmt.column_int(i);
 						break;
 
-					case "downloaded":
+					case "episode_downloaded":
 						downloaded = (bool)stmt.column_int(i);
 						break;
 
-					case "file":
+					case "episode_file":
 						file = File.new_for_uri(stmt.column_text(i));
+						break;
+
+					case "subscription_title":
+						subscription_title = stmt.column_text(i);
 						break;
 				}
 			}
@@ -178,7 +182,7 @@ namespace Podsblitz {
 				this.db = new Database();
 				Sqlite.Statement stmt;
 
-				const string query = "SELECT * FROM episodes WHERE guid=$guid";
+				const string query = "SELECT * FROM episodes WHERE episode_guid=$guid";
 				this.db.db.prepare_v2(query, query.length, out stmt, null);
 				stmt.bind_text(stmt.bind_parameter_index("$guid"), guid);
 
@@ -204,7 +208,8 @@ namespace Podsblitz {
 
 				// UPSERT: https://stackoverflow.com/a/38463024
 
-				const string query1 = "UPDATE episodes SET guid=$guid, title=$title, description=$description, link=$link, pubdate=$pubdate, duration=$duration, subscription_id=$subscription_id, progress=$progress, completed=$completed, downloaded=$downloaded, file=$file WHERE id=$id";
+				debug("%%% QUERY 1 %%%");
+				const string query1 = "UPDATE episodes SET episode_guid=$guid, episode_title=$title, episode_description=$description, episode_link=$link, episode_pubdate=$pubdate, episode_duration=$duration, episode_subscription_id=$subscription_id, episode_progress=$progress, episode_completed=$completed, episode_downloaded=$downloaded, episode_file=$file WHERE id=$id";
 				this.db.db.prepare_v2(query1, query1.length, out stmt, null);
 				stmt.bind_text(stmt.bind_parameter_index("$guid"), guid);
 				stmt.bind_text(stmt.bind_parameter_index("$title"), title);
@@ -223,7 +228,8 @@ namespace Podsblitz {
 					stderr.printf("Error: %s\n", this.db.db.errmsg());
 				}
 
-				const string query2 = "INSERT INTO episodes (guid, title, description, link, pubdate, duration, subscription_id, progress, completed, downloaded, file) SELECT $guid, $title, $description, $link, $pubdate, $duration, $subscription_id, $progress, $completed, $downloaded, $file WHERE (Select Changes() = 0)";
+				debug("%%% QUERY 2 %%%");
+				const string query2 = "INSERT INTO episodes (episode_guid, episode_title, episode_description, episode_link, episode_pubdate, episode_duration, episode_subscription_id, episode_progress, episode_completed, episode_downloaded, episode_file) SELECT $guid, $title, $description, $link, $pubdate, $duration, $subscription_id, $progress, $completed, $downloaded, $file WHERE (Select Changes() = 0)";
 				this.db.db.prepare_v2(query2, query2.length, out stmt, null);
 				stmt.bind_text(stmt.bind_parameter_index("$guid"), guid);
 				stmt.bind_text(stmt.bind_parameter_index("$title"), title);
@@ -280,8 +286,7 @@ namespace Podsblitz {
 
 			}
 
-			assert(cover != null);
-			return cover.copy();
+			return cover/*.copy()*/;
 		}
 
 			

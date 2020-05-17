@@ -20,6 +20,12 @@ public class Podsblitz.EpisodeItem : Grid {
 		title.set_xalign(0);
 		title.hexpand = true;
 
+		var subscription_title = new Label(null);
+		subscription_title.set_markup("<b>%s</b>".printf(episode.subscription_title));
+		subscription_title.set_line_wrap(true);
+		subscription_title.set_xalign(0);
+		subscription_title.hexpand = true;
+
 		var descr = new Label(episode.description);
 		descr.set_line_wrap(true);
 		descr.set_xalign(0);
@@ -51,9 +57,16 @@ public class Podsblitz.EpisodeItem : Grid {
 			var image = new Gtk.Image.from_pixbuf(episode.get_cover(CoverSize.SMALL));
 			attach(image, 2, 0, 2, 2);
 		}
-		attach(title, 4, 0, 8, 1);
-		attach(descr, 4, 1, 8, 1);
-		attach(action_bar, 0, 2, 12, 1);
+
+
+		int y = 0;
+		if (with_cover) {
+			// Only show subscription title when in "cover mode"
+			attach(subscription_title, 4, y++, 8, 1);
+		}
+		attach(title, 4, y++, 8, 1);
+		attach(descr, 4, y++, 8, 1);
+		attach(action_bar, 0, y++, 12, 1);
 
 		set_margin_top(20);
 

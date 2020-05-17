@@ -12,12 +12,12 @@ namespace Podsblitz {
 	}
 
 
-
 	public enum CoverSize {
 		SMALL = 90,
 		MEDIUM = 150,
 		LARGE = 300
 	}
+
 
 	public class Application : Gtk.Application {
 
@@ -102,33 +102,39 @@ namespace Podsblitz {
 				Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 			);
 
-			load_subscriptions();
-			main_window.cover_view.set_subscriptions(subscriptions);
-
 			// TODO: Store current selection in GSettings and read from there
 			main_window.stack.set_visible_child_name("library");
+
+			load_subscriptions.begin( (obj, res) => {
+				load_subscriptions.end(res);
+				main_window.cover_view.set_subscriptions(subscriptions);
+			});
 		}
 
 
 
 		// Load subscriptions from database
-		protected void load_subscriptions() {
+		protected async void load_subscriptions() {
+			Idle.add(load_subscriptions.callback);
+			yield;
 
 			try {
 				var stream = new List<Episode>();
 
 				this.db.query("SELECT * FROM subscriptions");
 				var results = this.db.getAll();
+
 				foreach (Gee.HashMap<string,string> result in results) {
 					var subscription = new Subscription.from_hash_map(result);
 					subscriptions.append(subscription);
 
+					// Fill stream (latest episodes from all subscriptions)
 					int i = 0;
 					foreach (var episode in subscription.episodes) {
 						stream.insert_sorted(episode, (a, b) => {
 							return b.pubdate.compare(a.pubdate);
 						});
-						if (++i > 5) {
+						if (i++ > 5) {
 							break;
 						}
 					}
