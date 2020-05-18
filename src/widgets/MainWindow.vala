@@ -87,6 +87,12 @@ namespace Podsblitz {
 					episodes_view.clear();
 					episodes_view.set_episodes(subscription.episodes);
 				});
+				
+				subscription.fetch_cover_async.begin( (obj, res) => {
+					subscription.fetch_cover_async.end(res);
+					subscription.save();
+					detail_header.image.pixbuf = subscription.cover;
+				});
 			});
 
 			vbox.pack_start(detail_header, false, true, 0);

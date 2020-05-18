@@ -15,13 +15,13 @@ public class Podsblitz.EpisodeItem : Grid {
 		row_homogeneous = false;
 
 		var title = new Label(null);
-		title.set_markup("<big><b>%s</b></big>".printf(episode.title));
+		title.set_markup("<big><b>%s</b></big>".printf(Markup.escape_text(episode.title)));
 		title.set_line_wrap(true);
 		title.set_xalign(0);
 		title.hexpand = true;
 
 		var subscription_title = new Label(null);
-		subscription_title.set_markup("<b>%s</b>".printf(episode.subscription_title));
+		subscription_title.set_markup("<b>%s</b>".printf(Markup.escape_text(episode.subscription_title)));
 		subscription_title.set_line_wrap(true);
 		subscription_title.set_xalign(0);
 		subscription_title.hexpand = true;

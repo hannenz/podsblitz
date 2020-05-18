@@ -157,7 +157,7 @@ public class Podsblitz.Player : Grid {
 	}
 
 	public void set_title(string title) {
-		title_label.set_markup(title);
+		title_label.set_markup(Markup.escape_text(title));
 	}
 
 	public void set_cover(Gdk.Pixbuf pixbuf) {

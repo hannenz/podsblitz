@@ -251,14 +251,39 @@ namespace Podsblitz {
 
 
 		public async void fetch_cover_async() {
+			debug ("*** FETCHING COVER ***");
 
 			yield load_xml_async(); // .begin((obj, res) => {
 				// load_xml_async.end(res);
 
 			var imageurl = get_xpath("/rss/channel/image/url");
 			if (imageurl == null) {
-				stderr.printf("No image url\n");
-				return;
+
+				var ctx = new Xml.XPath.Context(xml_doc);
+				ctx.register_ns("itunes", "http://www.w3.org/2005/Atom");
+				Xml.XPath.Object *obj = ctx.eval_expression("/rss/channel/itunes:image");
+
+				Xml.Node *node = null;
+				if (obj->nodesetval != null && obj->nodesetval->item(0) != null) {
+					node = obj->nodesetval->item(0);
+				}
+				if (node == null) {
+					error("Node is null!");
+				}
+
+				for (var attr = node->properties; attr != null; attr = attr->next) {
+					debug(attr->name);
+					if (attr->name == "href") {
+						imageurl = attr->children->content;
+						break;
+					}
+				}
+
+				if (imageurl == null) {
+					stderr.printf("No image url\n");
+					return;
+				}
+				debug("imageurl = %s", imageurl);
 			}
 
 			debug("Loading image from %s\n", imageurl);
@@ -324,6 +349,8 @@ namespace Podsblitz {
 			if (ctx == null) {
 				return null;
 			}
+
+			ctx.register_ns("itunes", "http://www.w3.org/2005/Atom");
 
 			Xml.XPath.Object *obj = ctx.eval_expression(xpath);
 			if (obj == null) {
