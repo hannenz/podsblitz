@@ -114,7 +114,6 @@ namespace Podsblitz {
 			for (int i = 0; i < cols; i++) {
 
 				var column_name = stmt.column_name(i);
-				debug(column_name);
 				switch (column_name) {
 
 					case "id":

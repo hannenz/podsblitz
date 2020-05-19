@@ -87,11 +87,11 @@ namespace Podsblitz {
 					episodes_view.clear();
 					episodes_view.set_episodes(subscription.episodes);
 				});
-				
+
 				subscription.fetch_cover_async.begin( (obj, res) => {
 					subscription.fetch_cover_async.end(res);
 					subscription.save();
-					detail_header.image.pixbuf = subscription.cover;
+					detail_header.image.pixbuf = subscription.cover_medium;
 				});
 			});
 
@@ -120,12 +120,12 @@ namespace Podsblitz {
 			stack.add_titled(placeholder2, "offline", _("Offline"));
 			stack.add_titled(placeholder3, "playlist", _("Playlist"));
 
+			// stack.map.connect( () => {
+			// 	var name = stack.get_visible_child_name();
+			// 	debug("Saving state: %s\n", name);
+			// 	Application.settings.set_string("stack-selected", name);
+			// });
 			stack.set_visible_child_name(Application.settings.get_string("stack-selected"));
-			stack.map.connect( (source) => {
-				var name = stack.get_visible_child_name();
-				print("Saving state: %s\n", name);
-				Application.settings.set_string("stack-selected", name);
-			});
 
 			paned.pack1(stack, true, false);
 
@@ -177,7 +177,6 @@ namespace Podsblitz {
 				}
 				else {
 					Application.settings.set_boolean("window-maximized", false);
-
 					Gdk.Rectangle rect;
 					get_allocation(out rect);
 					Application.settings.set("window-size", "(ii)", rect.width, rect.height);
@@ -186,6 +185,10 @@ namespace Podsblitz {
 					get_position(out root_x, out root_y);
 					Application.settings.set("window-position", "(ii)", root_x, root_y);
 				}
+
+				var stack_name = stack.get_visible_child_name();
+				debug(stack_name);
+				Application.settings.set_string("stack-selected", stack_name);
 
 				return false;
 			});

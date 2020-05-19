@@ -67,8 +67,6 @@ namespace Podsblitz {
 			app_menu.append("Add a podcast", "app.add-subscription");
 			app_menu.append("Update all", "app.update-subscriptions");
 			set_app_menu(app_menu);
-
-			// update_subscriptions();
 		}
 
 
@@ -103,7 +101,9 @@ namespace Podsblitz {
 			);
 
 			// TODO: Store current selection in GSettings and read from there
-			main_window.stack.set_visible_child_name("library");
+			var stack_name = settings.get_string("stack-selected");
+			debug(stack_name);
+			main_window.stack.set_visible_child_name(stack_name);
 
 			load_subscriptions.begin( (obj, res) => {
 				load_subscriptions.end(res);
@@ -115,6 +115,7 @@ namespace Podsblitz {
 
 		// Load subscriptions from database
 		protected async void load_subscriptions() {
+
 			Idle.add(load_subscriptions.callback);
 			yield;
 
@@ -175,8 +176,6 @@ namespace Podsblitz {
 			var url = dlg.get_url();
 
 			var subscription = new Subscription();
-
-			// registrate_subscription(subscription);
 
 			subscription.subscribe(url);
 		}

@@ -71,20 +71,20 @@ namespace Podsblitz {
 			
 			cover = noimage;
 
-			// try {
-			// 	var loader = new Gdk.PixbufLoader();
-			// 	loader.write(Base64.decode(map["cover"]));
-			// 	cover = loader.get_pixbuf();
-			// 	loader.close();
-			// }
-			// catch (Error e) {
-			// 	stderr.printf("Failed to create pixbuf for cover: %s\n", e.message);
-			// }
+			try {
+				var loader = new Gdk.PixbufLoader();
+				loader.write(Base64.decode(map["cover"]));
+				cover = loader.get_pixbuf();
+				loader.close();
+			}
+			catch (Error e) {
+				stderr.printf("Failed to create pixbuf for cover: %s\n", e.message);
+			}
 
 
-			// cover_large = cover.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
-			// cover_medium = cover.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
-			// cover_small = cover.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
+			cover_large = cover.scale_simple(CoverSize.LARGE, CoverSize.LARGE, Gdk.InterpType.BILINEAR);
+			cover_medium = cover.scale_simple(CoverSize.MEDIUM, CoverSize.MEDIUM, Gdk.InterpType.BILINEAR);
+			cover_small = cover.scale_simple(CoverSize.SMALL, CoverSize.SMALL, Gdk.InterpType.BILINEAR);
 
 			// Load episodes
 			Sqlite.Statement stmt;
@@ -253,15 +253,17 @@ namespace Podsblitz {
 		public async void fetch_cover_async() {
 			debug ("*** FETCHING COVER ***");
 
-			yield load_xml_async(); // .begin((obj, res) => {
-				// load_xml_async.end(res);
+			yield load_xml_async(); 
 
 			var imageurl = get_xpath("/rss/channel/image/url");
 			if (imageurl == null) {
 
 				var ctx = new Xml.XPath.Context(xml_doc);
-				ctx.register_ns("itunes", "http://www.w3.org/2005/Atom");
+				ctx.register_ns("itunes", "http://www.itunes.com/dtds/podcast-1.0.dtd");
 				Xml.XPath.Object *obj = ctx.eval_expression("/rss/channel/itunes:image");
+				if (obj == null) {
+					error("obj is null");
+				}
 
 				Xml.Node *node = null;
 				if (obj->nodesetval != null && obj->nodesetval->item(0) != null) {
