@@ -11,6 +11,7 @@ namespace Podsblitz {
 		public Gtk.Stack stack2;
 
 		public CoverView cover_view;
+		public ListView episodes_view;
 		public ListView latest_episodes_view;
 		
 		public Player player;
@@ -58,16 +59,7 @@ namespace Podsblitz {
 			// vbox.pack_start(back_btn, false, true, 0);
 
 
-			var episodes_view = new ListView(false);
-			episodes_view.play.connect( (id) => {
-				// Get episode for id
-				var episode = new Episode.by_id(id);
-				// episode.dump();
-				var cover = episode.get_cover(CoverSize.LARGE);
-				this.player.set_cover(cover);
-				this.player.set_title(episode.title);
-				this.player.play(episode.file.get_uri());
-			});
+			episodes_view = new ListView(false);
 
 			var detail_header = new SubscriptionDetailHeader();
 			detail_header.update_request.connect( () => {

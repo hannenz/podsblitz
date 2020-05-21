@@ -106,12 +106,15 @@ namespace Podsblitz {
 				main_window.cover_view.set_subscriptions(subscriptions);
 			});
 
+
 			var n = settings.get_string("stack-selected");
-			debug(n);
 			main_window.stack.set_visible_child_name(n);
 			main_window.stack_switched.connect( (name) => {
 				settings.set_string("stack-selected", name);
 			});
+
+			main_window.latest_episodes_view.play.connect(play_episode);
+			main_window.episodes_view.play.connect(play_episode);
 		}
 
 
@@ -165,6 +168,21 @@ namespace Podsblitz {
 
 
 
+		/**
+		 * Play an episode
+		 *
+		 * @param int 		episode id
+		 * @return void
+		 */
+		public void play_episode(int id) {
+			// Get episode for id
+			var episode = new Episode.by_id(id);
+			episode.dump();
+			var cover = episode.get_cover(CoverSize.LARGE);
+			main_window.player.set_cover(cover);
+			main_window.player.set_title(episode.title);
+			main_window.player.play(episode.file.get_uri());
+		}
 
 
 

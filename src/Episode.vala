@@ -291,6 +291,8 @@ namespace Podsblitz {
 			
 
 		public void dump() {
+			print("ID: %u\n", id);
+			print("Subscription ID: %u\n", subscription_id);
 			print("Episode GUID: %s\n", guid);
 			print("Title: %s\n", title);
 			print("Link: %s\n", link);
