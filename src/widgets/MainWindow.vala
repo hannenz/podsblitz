@@ -16,6 +16,7 @@ namespace Podsblitz {
 		public Player player;
 		public Subscription subscription = null;
 
+		public signal void stack_switched(string name);
 
 		public MainWindow(Application app) {
 			Object (
@@ -120,12 +121,19 @@ namespace Podsblitz {
 			stack.add_titled(placeholder2, "offline", _("Offline"));
 			stack.add_titled(placeholder3, "playlist", _("Playlist"));
 
-			// stack.map.connect( () => {
-			// 	var name = stack.get_visible_child_name();
-			// 	debug("Saving state: %s\n", name);
-			// 	Application.settings.set_string("stack-selected", name);
-			// });
-			stack.set_visible_child_name(Application.settings.get_string("stack-selected"));
+			sw.map.connect( () => {
+				stack_switched("stream");
+			});
+			stack2.map.connect( () => {
+				stack_switched("library");
+			});
+			placeholder2.map.connect( () => {
+				stack_switched("offline");
+			});
+			placeholder3.map.connect( () => {
+				stack_switched("playlist");
+			});
+
 
 			paned.pack1(stack, true, false);
 

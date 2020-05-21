@@ -100,14 +100,17 @@ namespace Podsblitz {
 				Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
 			);
 
-			// TODO: Store current selection in GSettings and read from there
-			var stack_name = settings.get_string("stack-selected");
-			debug(stack_name);
-			main_window.stack.set_visible_child_name(stack_name);
 
 			load_subscriptions.begin( (obj, res) => {
 				load_subscriptions.end(res);
 				main_window.cover_view.set_subscriptions(subscriptions);
+			});
+
+			var n = settings.get_string("stack-selected");
+			debug(n);
+			main_window.stack.set_visible_child_name(n);
+			main_window.stack_switched.connect( (name) => {
+				settings.set_string("stack-selected", name);
 			});
 		}
 
